@@ -1,28 +1,36 @@
-import { useEffect, useRef } from "react";
-import { letterType } from "../types/letterTypes";
+import { useEffect, useState } from "react";
 
 interface props {
-  letter: string;
-  LType?: letterType;
+  trueLetter: string;
+  userLetter: string;
 }
 
-const Letter = ({ letter, LType }: props) => {
-  const color = useRef<string>("text-secondary");
+const Letter = ({ trueLetter, userLetter }: props) => {
+  const [color, setColor] = useState<string>("text-secondary");
+  //   const isMatching = useRef<boolean>(userLetter === trueLetter);
+
   useEffect(() => {
-    switch (LType) {
-      case letterType.CORRECT:
-        color.current = "text-green-500";
+    let isMatching = null;
+    if (userLetter) {
+      isMatching = userLetter === trueLetter;
+    }
+
+    switch (isMatching) {
+      case true:
+        setColor("text-gray-200");
         break;
-      case letterType.INCORRECT:
-        color.current = "text-red-500";
+      case false:
+        setColor("text-red-500");
         break;
       default:
+        setColor("text-secondary");
         break;
     }
-  }, []);
+  }, [userLetter]);
+
   return (
-    <div className={`${color.current}`}>
-      {letter === " " ? <>&nbsp;</> : letter}
+    <div className={`${color}`}>
+      {trueLetter === " " ? <>&nbsp;</> : trueLetter}
     </div>
   );
 };

@@ -10,6 +10,7 @@ module.exports = {
       colors: {
         primary: "#343538",
         secondary: "#686869",
+        transparent: "rgba(0,0,0,0)",
       },
       fontFamily: {
         "roboto-mono": ["Roboto Mono", "monospace"],
