@@ -9,10 +9,10 @@ module.exports = {
     extend: {
       colors: {
         primary: "#343538",
-        secondary: "#5c5d5e",
+        secondary: "#686869",
       },
       fontFamily: {
-        poppins: ["Poppins", "sans-serif"],
+        "roboto-mono": ["Roboto Mono", "monospace"],
       },
     },
   },
