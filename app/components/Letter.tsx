@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 interface props {
   trueLetter: string;
   userLetter: string;
+  addKeyPress: () => void;
 }
 
-const Letter = ({ trueLetter, userLetter }: props) => {
+const Letter = ({ trueLetter, userLetter, addKeyPress }: props) => {
   const [color, setColor] = useState<string>("text-secondary");
   //   const isMatching = useRef<boolean>(userLetter === trueLetter);
 
@@ -17,6 +18,7 @@ const Letter = ({ trueLetter, userLetter }: props) => {
 
     switch (isMatching) {
       case true:
+        addKeyPress();
         setColor("text-gray-200");
         break;
       case false:
