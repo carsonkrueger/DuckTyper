@@ -35,6 +35,10 @@ export default function Home() {
     }
   }, [isPaused]);
 
+  useEffect(() => {
+    if (timer <= 0.01) setIsPaused(true);
+  }, [timer]);
+
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setIsPaused(false);
     setUserText(e.target.value.split(""));
