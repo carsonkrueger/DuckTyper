@@ -27,8 +27,7 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState<boolean>(true);
 
   useEffect(() => {
-    if (isPaused) setTimer(initTime.current);
-    else {
+    if (!isPaused) {
       const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
@@ -49,12 +48,13 @@ export default function Home() {
     keysPressed.current -= 1;
   };
 
-  const reset = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
+    if (e) e.preventDefault();
     inputRef.current.value = "";
     keysPressed.current = 0;
     setUserText([]);
     setIsPaused(true);
+    setTimer(initTime.current);
   };
 
   const calcTime = (): string => {
@@ -69,27 +69,45 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen items-center justify-center p-10 bg-dark text-secondary font-roboto-mono">
-      <header className="flex flex-row absolute top-0 pt-4 text-3xl text-white">
-        <Image
-          src={"/duck.svg"}
-          alt={"DuckTyper logo"}
-          width={20}
-          height={20}
-        />
-        DuckTyper
+    <main className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono">
+      <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
+        <div className="flex space-x-3">
+          <Image
+            src={"/duck.svg"}
+            alt={"DuckTyper logo"}
+            width={30}
+            height={30}
+          />
+          <p>DuckTyper</p>
+        </div>
+
+        <div></div>
+        {/* <a
+          className="flex justify-center"
+          href=""
+          onClick={(e) => e.preventDefault()}
+        >
+          <Image
+            className="[&>svg>g>path]:fill-white"
+            src={"/share.svg"}
+            alt={"Share website"}
+            width={25}
+            height={25}
+          />
+        </a> */}
       </header>
 
-      <div className="flex flex-col space-y-2">
+      <div className="flex flex-col max-w-6xl space-y-2">
         <div className="flex flex-row justify-between text-4xl text-primary">
           <p>{timer}</p>
-          <div className="flex flex-row items-center space-x-3">
+
+          <div className="flex flex-row items-end space-x-2">
             <p>{calcTime()}</p>
             <p className="text-lg text-secondary">wpm</p>
           </div>
         </div>
 
-        <div className="relative flex flex-wrap max-w-6xl text-2xl select-none">
+        <div className="relative flex flex-wrap text-2xl select-none">
           {trueText.current.map((ch, idx) => (
             <Letter
               trueLetter={ch}
@@ -115,6 +133,8 @@ export default function Home() {
           />
         </a>
       </div>
+
+      <div></div>
     </main>
   );
 }
