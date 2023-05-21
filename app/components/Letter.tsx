@@ -1,13 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface props {
   trueLetter: string;
   userLetter: string;
+  isFrontLetter: boolean;
   addKeyPress: () => void;
+  removeKeyPress: () => void;
 }
 
-const Letter = ({ trueLetter, userLetter, addKeyPress }: props) => {
-  const [color, setColor] = useState<string>("text-secondary");
+const Letter = ({
+  trueLetter,
+  userLetter,
+  isFrontLetter,
+  addKeyPress,
+  removeKeyPress,
+}: props) => {
+  const [style, setStyle] = useState<string>("text-secondary");
+  const needToAdd = useRef(true);
+  // const prevUserLetter = useRef<string | null>(null);
+  // const prevMatching = useRef<boolean | null>(null);
   //   const isMatching = useRef<boolean>(userLetter === trueLetter);
 
   useEffect(() => {
@@ -18,20 +29,31 @@ const Letter = ({ trueLetter, userLetter, addKeyPress }: props) => {
 
     switch (isMatching) {
       case true:
-        addKeyPress();
-        setColor("text-gray-200");
+        if (needToAdd.current) {
+          addKeyPress();
+          needToAdd.current = false;
+        }
+        setStyle("text-gray-200");
         break;
       case false:
-        setColor("text-red-500");
+        setStyle("text-red-500");
         break;
-      default:
-        setColor("text-secondary");
+      case null:
+        if (!needToAdd.current) {
+          removeKeyPress();
+          needToAdd.current = true;
+        }
+        setStyle("text-secondary");
         break;
     }
   }, [userLetter]);
 
   return (
-    <div className={`${color}`}>
+    <div
+      className={` border-0 border-l-[1px] border-l-${
+        isFrontLetter ? "primary" : "dark"
+      } ${style}`}
+    >
       {trueLetter === " " ? <>&nbsp;</> : trueLetter}
     </div>
   );

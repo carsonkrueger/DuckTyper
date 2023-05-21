@@ -18,9 +18,10 @@ export default function Home() {
       ""
     )
   );
-  const initTime = useRef(30);
+  const initTime = useRef(10);
   const keysPressed = useRef(0);
   const lettersPerWord = useRef(5);
+  const canType = useRef(true);
 
   const [userText, setUserText] = useState<Array<string>>([]);
   const [timer, setTimer] = useState<number>(initTime.current);
@@ -36,7 +37,10 @@ export default function Home() {
   }, [isPaused]);
 
   useEffect(() => {
-    if (timer <= 0.01) setIsPaused(true);
+    if (timer <= 0.01) {
+      canType.current = false;
+      setIsPaused(true);
+    }
   }, [timer]);
 
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -46,19 +50,27 @@ export default function Home() {
 
   const addKeyPress = () => {
     keysPressed.current += 1;
+    console.log("added");
   };
 
   const removeKeyPress = () => {
     keysPressed.current -= 1;
+    console.log("removed");
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
     if (e) e.preventDefault();
     inputRef.current.value = "";
     keysPressed.current = 0;
+    canType.current = true;
     setUserText([]);
     setIsPaused(true);
     setTimer(initTime.current);
+    focusInputEl();
+  };
+
+  const focusInputEl = () => {
+    inputRef.current.focus();
   };
 
   const calcTime = (): string => {
@@ -73,7 +85,10 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono">
+    <main
+      className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
+      onClick={focusInputEl}
+    >
       <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
         <div className="flex space-x-3">
           <Image
@@ -105,10 +120,10 @@ export default function Home() {
         <div className="flex flex-row justify-between text-4xl text-primary">
           <p>{timer}</p>
 
-          <div className="flex flex-row items-end space-x-2">
+          {/* <div className="flex flex-row items-end space-x-2">
             <p>{calcTime()}</p>
             <p className="text-lg text-secondary">wpm</p>
-          </div>
+          </div> */}
         </div>
 
         <div className="relative flex flex-wrap text-2xl select-none">
@@ -116,7 +131,9 @@ export default function Home() {
             <Letter
               trueLetter={ch}
               userLetter={userText[idx]}
+              isFrontLetter={idx === keysPressed.current}
               addKeyPress={addKeyPress}
+              removeKeyPress={removeKeyPress}
               key={idx}
             />
           ))}
@@ -125,6 +142,7 @@ export default function Home() {
             onChange={onTextChange}
             ref={inputRef}
             spellCheck={false}
+            disabled={!canType.current}
           />
         </div>
         <a className="self-center p-2" href="" onClick={reset}>
