@@ -12,6 +12,7 @@ module.exports = {
         primary: "rgb(234,179,8)",
         secondary: "#686869",
         secondaryHighlight: "#4a4a4a",
+        secondaryLowlight: "#424242",
         transparent: "rgba(0,0,0,0)",
       },
       fontFamily: {

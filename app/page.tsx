@@ -13,12 +13,13 @@ export default function Home() {
     )
   );
   const correctKeysPressed = useRef(0);
-  const totalKeysPressed = useRef(0);
+  // const totalKeysPressed = useRef(0);
+  const errorsPressed = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
-
-  // const [initTime, setInitTime] = useState(30);
   const initTime = useRef(30);
+
+  const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
   const [userText, setUserText] = useState<Array<string>>([]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
@@ -40,7 +41,7 @@ export default function Home() {
   }, [timer]);
 
   useEffect(() => {
-    totalKeysPressed.current = userText.length;
+    setTotalKeysPressed(userText.length);
   }, [userText]);
 
   const setInitTime = (time: number) => {
@@ -53,30 +54,6 @@ export default function Home() {
     setUserText(e.target.value.split(""));
   };
 
-  // const addKeyPress = (lType: letterType) => {
-  //   switch (lType) {
-  //     case letterType.CORRECT:
-  //       correctKeysPressed.current += 1;
-  //       totalKeysPressed.current += 1;
-  //       break;
-  //     case letterType.INCORRECT:
-  //       totalKeysPressed.current += 1;
-  //       break;
-  //   }
-  // };
-
-  // const removeKeyPress = (lType: letterType) => {
-  //   switch (lType) {
-  //     case letterType.CORRECT:
-  //       correctKeysPressed.current -= 1;
-  //       totalKeysPressed.current -= 1;
-  //       break;
-  //     case letterType.INCORRECT:
-  //       totalKeysPressed.current -= 1;
-  //       break;
-  //   }
-  // };
-
   const addKeyPress = () => {
     correctKeysPressed.current++;
   };
@@ -85,12 +62,17 @@ export default function Home() {
     correctKeysPressed.current--;
   };
 
+  const addErrorPress = () => {
+    errorsPressed.current++;
+  };
+
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
     if (e) e.preventDefault();
     inputRef.current.value = "";
     correctKeysPressed.current = 0;
-    totalKeysPressed.current = 0;
+    errorsPressed.current = 0;
     canType.current = true;
+    setTotalKeysPressed(0);
     setUserText([]);
     setIsPaused(true);
     setTimer(initTime.current);
@@ -108,8 +90,8 @@ export default function Home() {
         (initTime.current - timer)) *
       60
     ).toFixed(0);
-    if (time !== "NaN" && time !== "Infinity") return time;
-    else return "0";
+    if (correctKeysPressed.current <= 0 || time === "Infinity") return "0";
+    return time;
   };
 
   return (
@@ -151,22 +133,28 @@ export default function Home() {
             <div
               className={`${
                 isPaused ? "" : "hidden"
-              } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight first:pl-2 overflow-hidden [&>*]:px-1 [&>*]:cursor-pointer`}
+              } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
             >
               <p
-                className="hover:bg-secondaryHighlight"
+                className={`hover:bg-secondaryHighlight ${
+                  initTime.current === 30 ? "bg-secondaryLowlight" : ""
+                }`}
                 onClick={() => setInitTime(30)}
               >
                 30
               </p>
               <p
-                className="hover:bg-secondaryHighlight"
+                className={`hover:bg-secondaryHighlight ${
+                  initTime.current === 60 ? "bg-secondaryLowlight" : ""
+                }`}
                 onClick={() => setInitTime(60)}
               >
                 60
               </p>
               <p
-                className="hover:bg-secondaryHighlight"
+                className={`hover:bg-secondaryHighlight ${
+                  initTime.current === 90 ? "bg-secondaryLowlight" : ""
+                }`}
                 onClick={() => setInitTime(90)}
               >
                 90
@@ -185,14 +173,15 @@ export default function Home() {
             <Letter
               trueLetter={ch}
               userLetter={userText[idx]}
-              isFrontLetter={idx === totalKeysPressed.current && !isPaused}
+              isFrontLetter={idx === totalKeysPressed && !isPaused}
               addKeyPress={addKeyPress}
               removeKeyPress={removeKeyPress}
+              addErrorPress={addErrorPress}
               key={idx}
             />
           ))}
           <textarea
-            className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent select-auto outline-none cursor-pointer"
+            className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"
             onChange={onTextChange}
             ref={inputRef}
             spellCheck={false}
@@ -200,7 +189,7 @@ export default function Home() {
           />
         </div>
         <a
-          className="self-center p-2 rounded-full hover:bg-secondaryHighlight"
+          className="self-center p-2 rounded-full hover:bg-secondaryLowlight"
           href=""
           onClick={reset}
         >

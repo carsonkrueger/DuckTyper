@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import { letterType } from "../types/letterTypes";
-
 interface props {
   trueLetter: string;
   userLetter: string;
   isFrontLetter: boolean;
   addKeyPress: () => void;
   removeKeyPress: () => void;
+  addErrorPress: () => void;
 }
 
 const Letter = ({
@@ -16,6 +15,7 @@ const Letter = ({
   isFrontLetter,
   addKeyPress,
   removeKeyPress,
+  addErrorPress,
 }: props) => {
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
@@ -36,29 +36,6 @@ const Letter = ({
       isMatching = userLetter === trueLetter;
     }
 
-    // switch (isMatching) {
-    //   case true:
-    //     if (needToAdd.current) {
-    //       addKeyPress(letterType.CORRECT);
-    //       needToAdd.current = false;
-    //     }
-    //     setColor("text-gray-200");
-    //     break;
-    //   case false:
-    //     addKeyPress(letterType.INCORRECT);
-    //     setColor("text-red-600");
-    //     break;
-    //   case null:
-    //     if (!needToAdd.current) {
-    //       removeKeyPress(letterType.INCORRECT);
-    //       needToAdd.current = true;
-    //     } else if (needToAdd.current) {
-    //       removeKeyPress(letterType.CORRECT);
-    //     }
-    //     setColor("text-secondary");
-    //     break;
-    // }
-
     switch (isMatching) {
       case true:
         if (needToAdd.current) {
@@ -68,7 +45,9 @@ const Letter = ({
         setColor("text-gray-200");
         break;
       case false:
-        setColor("text-red-600");
+        addErrorPress();
+        if (trueLetter === " ") setColor("text-red-500 border-b-red-500");
+        else setColor("text-red-500");
         break;
       case null:
         if (!needToAdd.current) {
@@ -80,8 +59,15 @@ const Letter = ({
     }
   }, [userLetter]);
 
+  useEffect(() => {
+    if (isFrontLetter) setBorder("border-l-primary");
+    else setBorder("border-l-dark");
+  }, [isFrontLetter]);
+
   return (
-    <div className={`border-l-[1px] ${border} ${color}`}>
+    <div
+      className={`border-l-[1px] border-b-[1px] border-b-dark ${border} ${color}`}
+    >
       {trueLetter === " " ? <>&nbsp;</> : trueLetter}
     </div>
   );
