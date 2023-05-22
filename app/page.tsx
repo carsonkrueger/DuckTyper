@@ -3,7 +3,6 @@
 import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import Letter from "./components/Letter";
 import Image from "next/image";
-import { letterType } from "./types/letterTypes";
 
 export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null!);
@@ -17,7 +16,8 @@ export default function Home() {
   const errorsPressed = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
-  const initTime = useRef(30);
+  const initTimes = useRef([30, 60, 90]);
+  const initTime = useRef(initTimes.current[1]);
 
   const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
   const [userText, setUserText] = useState<Array<string>>([]);
@@ -56,6 +56,7 @@ export default function Home() {
 
   const addKeyPress = () => {
     correctKeysPressed.current++;
+    console.log(correctKeysPressed.current);
   };
 
   const removeKeyPress = () => {
@@ -67,6 +68,7 @@ export default function Home() {
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
+    setIsPaused(true);
     if (e) e.preventDefault();
     inputRef.current.value = "";
     correctKeysPressed.current = 0;
@@ -74,7 +76,6 @@ export default function Home() {
     canType.current = true;
     setTotalKeysPressed(0);
     setUserText([]);
-    setIsPaused(true);
     setTimer(initTime.current);
     focusInputEl();
   };
@@ -137,25 +138,31 @@ export default function Home() {
             >
               <p
                 className={`hover:bg-secondaryHighlight ${
-                  initTime.current === 30 ? "bg-secondaryLowlight" : ""
+                  initTime.current === initTimes.current[0]
+                    ? "bg-secondaryLowlight"
+                    : ""
                 }`}
-                onClick={() => setInitTime(30)}
+                onClick={() => setInitTime(initTimes.current[0])}
               >
                 30
               </p>
               <p
                 className={`hover:bg-secondaryHighlight ${
-                  initTime.current === 60 ? "bg-secondaryLowlight" : ""
+                  initTime.current === initTimes.current[1]
+                    ? "bg-secondaryLowlight"
+                    : ""
                 }`}
-                onClick={() => setInitTime(60)}
+                onClick={() => setInitTime(initTimes.current[1])}
               >
                 60
               </p>
               <p
                 className={`hover:bg-secondaryHighlight ${
-                  initTime.current === 90 ? "bg-secondaryLowlight" : ""
+                  initTime.current === initTimes.current[2]
+                    ? "bg-secondaryLowlight"
+                    : ""
                 }`}
-                onClick={() => setInitTime(90)}
+                onClick={() => setInitTime(initTimes.current[2])}
               >
                 90
               </p>
