@@ -11,6 +11,7 @@ module.exports = {
         dark: "#343538",
         primary: "rgb(234,179,8)",
         secondary: "#686869",
+        secondaryHighlight: "#4a4a4a",
         transparent: "rgba(0,0,0,0)",
       },
       fontFamily: {

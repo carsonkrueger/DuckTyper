@@ -12,12 +12,13 @@ export default function Home() {
       ""
     )
   );
-  const initTime = useRef(10);
   const correctKeysPressed = useRef(0);
   const totalKeysPressed = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
+  // const [initTime, setInitTime] = useState(30);
+  const initTime = useRef(30);
   const [userText, setUserText] = useState<Array<string>>([]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
@@ -38,29 +39,50 @@ export default function Home() {
     }
   }, [timer]);
 
+  useEffect(() => {
+    totalKeysPressed.current = userText.length;
+  }, [userText]);
+
+  const setInitTime = (time: number) => {
+    initTime.current = time;
+    setTimer(initTime.current);
+  };
+
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setIsPaused(false);
     setUserText(e.target.value.split(""));
   };
 
-  const addKeyPress = (lType: letterType) => {
-    switch (lType) {
-      case letterType.CORRECT:
-        correctKeysPressed.current++;
-        totalKeysPressed.current++;
-      case letterType.INCORRECT:
-        totalKeysPressed.current++;
-    }
+  // const addKeyPress = (lType: letterType) => {
+  //   switch (lType) {
+  //     case letterType.CORRECT:
+  //       correctKeysPressed.current += 1;
+  //       totalKeysPressed.current += 1;
+  //       break;
+  //     case letterType.INCORRECT:
+  //       totalKeysPressed.current += 1;
+  //       break;
+  //   }
+  // };
+
+  // const removeKeyPress = (lType: letterType) => {
+  //   switch (lType) {
+  //     case letterType.CORRECT:
+  //       correctKeysPressed.current -= 1;
+  //       totalKeysPressed.current -= 1;
+  //       break;
+  //     case letterType.INCORRECT:
+  //       totalKeysPressed.current -= 1;
+  //       break;
+  //   }
+  // };
+
+  const addKeyPress = () => {
+    correctKeysPressed.current++;
   };
 
-  const removeKeyPress = (lType: letterType) => {
-    switch (lType) {
-      case letterType.CORRECT:
-        correctKeysPressed.current--;
-        totalKeysPressed.current--;
-      case letterType.INCORRECT:
-        totalKeysPressed.current--;
-    }
+  const removeKeyPress = () => {
+    correctKeysPressed.current--;
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
@@ -129,11 +151,26 @@ export default function Home() {
             <div
               className={`${
                 isPaused ? "" : "hidden"
-              } flex text-sm text-secondary space-x-1 my-2 justify-center items-center rounded-lg border border-secondary first:pl-2 [&>*]:overflow-hidden [&>*]:cursor-pointer`}
+              } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight first:pl-2 overflow-hidden [&>*]:px-1 [&>*]:cursor-pointer`}
             >
-              <p className="hover:bg-white">30</p>
-              <p className="hover:bg-white">60</p>
-              <p className="hover:bg-white">90</p>
+              <p
+                className="hover:bg-secondaryHighlight"
+                onClick={() => setInitTime(30)}
+              >
+                30
+              </p>
+              <p
+                className="hover:bg-secondaryHighlight"
+                onClick={() => setInitTime(60)}
+              >
+                60
+              </p>
+              <p
+                className="hover:bg-secondaryHighlight"
+                onClick={() => setInitTime(90)}
+              >
+                90
+              </p>
             </div>
           </div>
 
@@ -162,7 +199,11 @@ export default function Home() {
             disabled={!canType.current}
           />
         </div>
-        <a className="self-center p-2" href="" onClick={reset}>
+        <a
+          className="self-center p-2 rounded-full hover:bg-secondaryHighlight"
+          href=""
+          onClick={reset}
+        >
           <Image
             className=""
             src={"/redo.svg"}
