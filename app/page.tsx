@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  ChangeEvent,
-  KeyboardEvent,
-  MouseEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import Letter from "./components/Letter";
 import Image from "next/image";
+import { letterType } from "./types/letterTypes";
 
 export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null!);
@@ -19,7 +13,8 @@ export default function Home() {
     )
   );
   const initTime = useRef(10);
-  const keysPressed = useRef(0);
+  const correctKeysPressed = useRef(0);
+  const totalKeysPressed = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
@@ -48,20 +43,31 @@ export default function Home() {
     setUserText(e.target.value.split(""));
   };
 
-  const addKeyPress = () => {
-    keysPressed.current += 1;
-    console.log("added");
+  const addKeyPress = (lType: letterType) => {
+    switch (lType) {
+      case letterType.CORRECT:
+        correctKeysPressed.current++;
+        totalKeysPressed.current++;
+      case letterType.INCORRECT:
+        totalKeysPressed.current++;
+    }
   };
 
-  const removeKeyPress = () => {
-    keysPressed.current -= 1;
-    console.log("removed");
+  const removeKeyPress = (lType: letterType) => {
+    switch (lType) {
+      case letterType.CORRECT:
+        correctKeysPressed.current--;
+        totalKeysPressed.current--;
+      case letterType.INCORRECT:
+        totalKeysPressed.current--;
+    }
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
     if (e) e.preventDefault();
     inputRef.current.value = "";
-    keysPressed.current = 0;
+    correctKeysPressed.current = 0;
+    totalKeysPressed.current = 0;
     canType.current = true;
     setUserText([]);
     setIsPaused(true);
@@ -75,7 +81,7 @@ export default function Home() {
 
   const calcTime = (): string => {
     const time = (
-      (keysPressed.current /
+      (correctKeysPressed.current /
         lettersPerWord.current /
         (initTime.current - timer)) *
       60
@@ -118,12 +124,23 @@ export default function Home() {
 
       <div className="flex flex-col max-w-6xl space-y-2">
         <div className="flex flex-row justify-between text-4xl text-primary">
-          <p>{timer}</p>
+          <div className="flex space-x-3">
+            <p className={" min-w-[2.5rem]"}>{timer}</p>
+            <div
+              className={`${
+                isPaused ? "" : "hidden"
+              } flex text-sm text-secondary space-x-1 my-2 justify-center items-center rounded-lg border border-secondary first:pl-2 [&>*]:overflow-hidden [&>*]:cursor-pointer`}
+            >
+              <p className="hover:bg-white">30</p>
+              <p className="hover:bg-white">60</p>
+              <p className="hover:bg-white">90</p>
+            </div>
+          </div>
 
-          {/* <div className="flex flex-row items-end space-x-2">
+          <div className="flex flex-row items-end space-x-2">
             <p>{calcTime()}</p>
             <p className="text-lg text-secondary">wpm</p>
-          </div> */}
+          </div>
         </div>
 
         <div className="relative flex flex-wrap text-2xl select-none">
@@ -131,7 +148,7 @@ export default function Home() {
             <Letter
               trueLetter={ch}
               userLetter={userText[idx]}
-              isFrontLetter={idx === keysPressed.current}
+              isFrontLetter={idx === totalKeysPressed.current && !isPaused}
               addKeyPress={addKeyPress}
               removeKeyPress={removeKeyPress}
               key={idx}

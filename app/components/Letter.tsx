@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+import { letterType } from "../types/letterTypes";
+
 interface props {
   trueLetter: string;
   userLetter: string;
   isFrontLetter: boolean;
-  addKeyPress: () => void;
-  removeKeyPress: () => void;
+  addKeyPress: (lType: letterType) => void;
+  removeKeyPress: (lType: letterType) => void;
 }
 
 const Letter = ({
@@ -30,7 +32,7 @@ const Letter = ({
     switch (isMatching) {
       case true:
         if (needToAdd.current) {
-          addKeyPress();
+          addKeyPress(letterType.CORRECT);
           needToAdd.current = false;
         }
         setStyle("text-gray-200");
@@ -40,7 +42,7 @@ const Letter = ({
         break;
       case null:
         if (!needToAdd.current) {
-          removeKeyPress();
+          removeKeyPress(letterType.INCORRECT);
           needToAdd.current = true;
         }
         setStyle("text-secondary");
@@ -50,8 +52,8 @@ const Letter = ({
 
   return (
     <div
-      className={` border-0 border-l-[1px] border-l-${
-        isFrontLetter ? "primary" : "dark"
+      className={`border-l-[1px] ${
+        isFrontLetter ? "border-l-primary" : "border-l-dark"
       } ${style}`}
     >
       {trueLetter === " " ? <>&nbsp;</> : trueLetter}
