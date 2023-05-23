@@ -1,7 +1,8 @@
 import Letter from "./Letter";
 
 interface props {
-  word: string;
+  trueWord: string;
+  userWord: string;
   addKeyPress: () => void;
   removeKeyPress: () => void;
   addErrorPress: () => void;
@@ -17,11 +18,24 @@ interface props {
 //   addErrorPress: () => void;
 // }
 
-const Word = ({ word }: props) => {
+const Word = ({
+  trueWord,
+  userWord,
+  addKeyPress,
+  removeKeyPress,
+  addErrorPress,
+}: props) => {
   return (
     <div>
-      {word.split("").map(() => (
-        <Letter />
+      {trueWord.split("").map((ch, idx) => (
+        <Letter
+          trueLetter={ch}
+          userLetter={userWord[idx]}
+          isFrontLetter
+          addErrorPress={addErrorPress}
+          removeKeyPress={removeKeyPress}
+          addKeyPress={addKeyPress}
+        />
       ))}
     </div>
   );

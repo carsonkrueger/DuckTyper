@@ -175,7 +175,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative flex flex-wrap text-2xl select-none">
+        <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
           {trueText.current.map((ch, idx) => (
             <Letter
               trueLetter={ch}
