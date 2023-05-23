@@ -1,11 +1,22 @@
 "use client";
 
-import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  MouseEvent,
+  createContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Letter from "./components/Letter";
 import Image from "next/image";
+import { JsxElement } from "typescript";
+
+// const UserContext = createContext();
 
 export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null!);
+  const letterRef = useRef<JsxElement>(null!);
   const trueText = useRef<Array<string>>(
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book".split(
       ""
@@ -18,6 +29,7 @@ export default function Home() {
   const canType = useRef(true);
   const initTimes = useRef([30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
+  const letterWidth = useRef(inputRef.current.clientWidth);
 
   const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
   const [userText, setUserText] = useState<Array<string>>([]);
