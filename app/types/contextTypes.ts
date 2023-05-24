@@ -1,5 +1,3 @@
-import { TupleType } from "typescript";
-
 export enum LetterTypeState {
   NORMAL,
   CORRECT,
@@ -9,13 +7,10 @@ export enum LetterTypeState {
 export interface IWord {
   wordPos: number;
   trueWord: string;
-  letterStates: LetterTypeState[];
 }
 
 export type ContextType = {
   trueWords: IWord[];
+  letterStates: LetterTypeState[][];
   frontPos: [number, number];
-  addCorrectKeyPress: () => void;
-  removeCorrectKeyPress: () => void;
-  addErrorKeyPress: () => void;
 };

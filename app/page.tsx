@@ -8,26 +8,36 @@ import {
   useRef,
   useState,
 } from "react";
-import Word from "./components/Word";
-import Image from "next/image";
 
-import { IWord, LetterTypeState, ContextType } from "./types/contextTypes";
+import Image from "next/image";
 
 export const UserContext = createContext<ContextType>(null!);
 
+import Word from "./components/Word";
+import { IWord, LetterTypeState, ContextType } from "./types/contextTypes";
+
 export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null!);
-  const trueText = useState<string[]>(
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book".split(
-      " "
+  const [trueText, setTrueText] = useState<string[]>(
+    "Hello my friend".split(" ")
+  );
+  const [userText, setUserText] = useState<string[]>([]);
+  const [trueWords, setTrueWords] = useState<IWord[]>(
+    trueText.map((word, idx) => ({
+      trueWord: word.concat(" "),
+      wordPos: idx,
+    }))
+  );
+  const [letterStates, setLetterStates] = useState<LetterTypeState[][]>(
+    trueWords.map((word) =>
+      word.trueWord.split("").map((_) => LetterTypeState.NORMAL)
     )
   );
-  const [trueWords, setTrueWords] = useState<IWord[]>(null!);
-  const [userText, setUserText] = useState<Array<string>>([]);
 
   const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
   const correctKeysPressed = useRef(0);
   const errorsPressed = useRef(0);
+
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
@@ -35,6 +45,10 @@ export default function Home() {
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
+
+  const curWordPos = useRef(0);
+  const curLetterPos = useRef(0);
+  const curWordLength = useRef(trueWords[curWordPos.current].trueWord.length);
 
   useEffect(() => {
     if (!isPaused) {
@@ -52,15 +66,37 @@ export default function Home() {
     }
   }, [timer]);
 
+  const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const userText = e.target.value.split("");
+    if (isPaused) setIsPaused(false);
+
+    const added = userText.length > totalKeysPressed;
+    setTotalKeysPressed(userText.length);
+
+    let newLetterStates = [...letterStates];
+    const isMatching =
+      trueText[curWordPos.current][curLetterPos.current] ===
+      userText[userText.length - 1];
+
+    if (isMatching && added)
+      newLetterStates[curWordPos.current][curLetterPos.current] =
+        LetterTypeState.CORRECT;
+    else if (!isMatching && added)
+      newLetterStates[curWordPos.current][curLetterPos.current] =
+        LetterTypeState.INCORRECT;
+    else if (!added)
+      newLetterStates[curWordPos.current][curLetterPos.current] =
+        LetterTypeState.NORMAL;
+
+    console.log(letterStates);
+    setLetterStates(newLetterStates);
+
+    calcNextPosition(added);
+  };
+
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
-  };
-
-  const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setIsPaused(false);
-    setUserText(e.target.value.split(""));
-    setTotalKeysPressed(userText.length);
   };
 
   const addCorrectKeyPress = () => {
@@ -82,8 +118,16 @@ export default function Home() {
     correctKeysPressed.current = 0;
     errorsPressed.current = 0;
     canType.current = true;
+    curWordPos.current = 0;
+    curLetterPos.current = 0;
+    curWordLength.current = trueWords[curWordPos.current].trueWord.length;
     setTotalKeysPressed(0);
     setUserText([]);
+    setLetterStates(
+      trueWords.map((word) =>
+        word.trueWord.split("").map((_) => LetterTypeState.NORMAL)
+      )
+    );
     setTimer(initTime.current);
     focusInputEl();
   };
@@ -103,6 +147,25 @@ export default function Home() {
     return time;
   };
 
+  // returns word, letter position
+  const calcNextPosition = (added: boolean) => {
+    if (added) {
+      curLetterPos.current++;
+      if (curLetterPos.current >= curWordLength.current) {
+        curWordPos.current++;
+        curWordLength.current = trueWords[curWordPos.current].trueWord.length;
+        curLetterPos.current = 0;
+      }
+    } else if (!added) {
+      curLetterPos.current--;
+      if (curLetterPos.current < 0) {
+        curWordPos.current--;
+        curWordLength.current = trueWords[curWordPos.current].trueWord.length;
+        curLetterPos.current = curWordLength.current - 1;
+      }
+    }
+  };
+
   return (
     <main
       className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
@@ -111,10 +174,11 @@ export default function Home() {
       <UserContext.Provider
         value={{
           trueWords: trueWords,
-          frontPos: [trueWords.length, trueWords[trueWords.length - 1].length],
-          addCorrectKeyPress: addCorrectKeyPress,
-          removeCorrectKeyPress: removeCorrectKeyPress,
-          addErrorKeyPress: addErrorKeyPress,
+          frontPos: [
+            trueWords.length,
+            trueWords[trueWords.length - 1].trueWord.length,
+          ],
+          letterStates: letterStates,
         }}
       >
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
@@ -153,36 +217,19 @@ export default function Home() {
                   isPaused ? "" : "hidden"
                 } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
               >
-                <p
-                  className={`hover:bg-secondaryHighlight ${
-                    initTime.current === initTimes.current[0]
-                      ? "bg-secondaryLowlight"
-                      : ""
-                  }`}
-                  onClick={() => setInitTime(initTimes.current[0])}
-                >
-                  30
-                </p>
-                <p
-                  className={`hover:bg-secondaryHighlight ${
-                    initTime.current === initTimes.current[1]
-                      ? "bg-secondaryLowlight"
-                      : ""
-                  }`}
-                  onClick={() => setInitTime(initTimes.current[1])}
-                >
-                  60
-                </p>
-                <p
-                  className={`hover:bg-secondaryHighlight ${
-                    initTime.current === initTimes.current[2]
-                      ? "bg-secondaryLowlight"
-                      : ""
-                  }`}
-                  onClick={() => setInitTime(initTimes.current[2])}
-                >
-                  90
-                </p>
+                {initTimes.current.map((time, idx) => (
+                  <p
+                    className={`hover:bg-secondaryHighlight ${
+                      initTime.current === initTimes.current[idx]
+                        ? "bg-secondaryLowlight"
+                        : ""
+                    }`}
+                    onClick={() => setInitTime(initTimes.current[idx])}
+                    key={idx}
+                  >
+                    {time}
+                  </p>
+                ))}
               </div>
             </div>
 
@@ -194,7 +241,7 @@ export default function Home() {
 
           <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
             {trueText.map((_, idx) => (
-              <Word wordPos={idx} />
+              <Word wordPos={idx} key={idx} />
             ))}
             <textarea
               className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"

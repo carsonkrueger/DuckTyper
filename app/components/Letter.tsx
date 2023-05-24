@@ -1,15 +1,7 @@
-import { UserContext } from "../page";
 import { useContext, useEffect, useRef, useState } from "react";
+import { UserContext } from "../page";
 
 import { LetterTypeState } from "../types/contextTypes";
-
-const {
-  trueWords,
-  frontPos,
-  addCorrectKeyPress,
-  removeCorrectKeyPress,
-  addErrorKeyPress,
-} = useContext(UserContext);
 
 interface props {
   wordPos: number;
@@ -17,49 +9,34 @@ interface props {
 }
 
 const Letter = ({ wordPos, letterPos }: props) => {
+  const { trueWords, frontPos, letterStates } = useContext(UserContext);
+
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
-  const needToAdd = useRef(true);
-  const firstRun = useRef(false);
   const trueLetter = useRef(trueWords[wordPos].trueWord[letterPos]);
-  const letterTypeState = useRef(trueWords[wordPos].letterStates[letterPos]);
+  const letterTypeStates = useRef(letterStates[wordPos]);
 
   useEffect(() => {
-    if (firstRun.current === false) {
-      firstRun.current = true;
-      return;
-    }
-
-    switch (letterTypeState.current) {
+    switch (letterTypeStates.current[letterPos]) {
       case LetterTypeState.CORRECT:
-        if (needToAdd.current) {
-          addCorrectKeyPress();
-          needToAdd.current = false;
-        }
         setColor("text-gray-200");
         break;
       case LetterTypeState.INCORRECT:
-        addErrorKeyPress();
         if (trueLetter.current === " ")
           setColor("text-red-500 border-b-red-500");
         else setColor("text-red-500");
         break;
       case LetterTypeState.NORMAL:
-        if (!needToAdd.current) {
-          removeCorrectKeyPress();
-          needToAdd.current = true;
-        }
         setColor("text-secondary");
         break;
-      default:
-        break;
     }
-  }, []);
+  }, [letterStates]);
 
   useEffect(() => {
-    if (isFrontLetter) setBorder("border-l-primary");
+    if (frontPos[0] === wordPos && frontPos[1] === letterPos)
+      setBorder("border-l-primary");
     else setBorder("border-l-dark");
-  }, [isFrontLetter]);
+  }, [frontPos]);
 
   return (
     <div
