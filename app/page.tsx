@@ -8,31 +8,31 @@ import {
   useRef,
   useState,
 } from "react";
-import Letter from "./components/Letter";
+import Word from "./components/Word";
 import Image from "next/image";
-import { JsxElement } from "typescript";
 
-// const UserContext = createContext();
+import { IWord, LetterTypeState, ContextType } from "./types/contextTypes";
+
+export const UserContext = createContext<ContextType>(null!);
 
 export default function Home() {
   const inputRef = useRef<HTMLTextAreaElement>(null!);
-  const letterRef = useRef<JsxElement>(null!);
-  const trueText = useRef<Array<string>>(
+  const trueText = useState<string[]>(
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book".split(
-      ""
+      " "
     )
   );
+  const [trueWords, setTrueWords] = useState<IWord[]>(null!);
+  const [userText, setUserText] = useState<Array<string>>([]);
+
+  const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
   const correctKeysPressed = useRef(0);
-  // const totalKeysPressed = useRef(0);
   const errorsPressed = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
+
   const initTimes = useRef([30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
-  const letterWidth = useRef(inputRef.current.clientWidth);
-
-  const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
-  const [userText, setUserText] = useState<Array<string>>([]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
 
@@ -52,10 +52,6 @@ export default function Home() {
     }
   }, [timer]);
 
-  useEffect(() => {
-    setTotalKeysPressed(userText.length);
-  }, [userText]);
-
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
@@ -64,18 +60,18 @@ export default function Home() {
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setIsPaused(false);
     setUserText(e.target.value.split(""));
+    setTotalKeysPressed(userText.length);
   };
 
-  const addKeyPress = () => {
+  const addCorrectKeyPress = () => {
     correctKeysPressed.current++;
-    console.log(correctKeysPressed.current);
   };
 
-  const removeKeyPress = () => {
+  const removeCorrectKeyPress = () => {
     correctKeysPressed.current--;
   };
 
-  const addErrorPress = () => {
+  const addErrorKeyPress = () => {
     errorsPressed.current++;
   };
 
@@ -112,19 +108,28 @@ export default function Home() {
       className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
       onClick={focusInputEl}
     >
-      <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
-        <div className="flex space-x-3">
-          <Image
-            src={"/duck.svg"}
-            alt={"DuckTyper logo"}
-            width={30}
-            height={30}
-          />
-          <p>DuckTyper</p>
-        </div>
+      <UserContext.Provider
+        value={{
+          trueWords: trueWords,
+          frontPos: [trueWords.length, trueWords[trueWords.length - 1].length],
+          addCorrectKeyPress: addCorrectKeyPress,
+          removeCorrectKeyPress: removeCorrectKeyPress,
+          addErrorKeyPress: addErrorKeyPress,
+        }}
+      >
+        <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
+          <div className="flex space-x-3">
+            <Image
+              src={"/duck.svg"}
+              alt={"DuckTyper logo"}
+              width={30}
+              height={30}
+            />
+            <p>DuckTyper</p>
+          </div>
 
-        <div></div>
-        {/* <a
+          <div></div>
+          {/* <a
           className="flex justify-center"
           href=""
           onClick={(e) => e.preventDefault()}
@@ -137,92 +142,85 @@ export default function Home() {
             height={25}
           />
         </a> */}
-      </header>
+        </header>
 
-      <div className="flex flex-col max-w-6xl space-y-2">
-        <div className="flex flex-row justify-between text-4xl text-primary">
-          <div className="flex space-x-3">
-            <p className={" min-w-[2.5rem]"}>{timer}</p>
-            <div
-              className={`${
-                isPaused ? "" : "hidden"
-              } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
-            >
-              <p
-                className={`hover:bg-secondaryHighlight ${
-                  initTime.current === initTimes.current[0]
-                    ? "bg-secondaryLowlight"
-                    : ""
-                }`}
-                onClick={() => setInitTime(initTimes.current[0])}
+        <div className="flex flex-col max-w-6xl space-y-2">
+          <div className="flex flex-row justify-between text-4xl text-primary">
+            <div className="flex space-x-3">
+              <p className={" min-w-[2.5rem]"}>{timer}</p>
+              <div
+                className={`${
+                  isPaused ? "" : "hidden"
+                } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
               >
-                30
-              </p>
-              <p
-                className={`hover:bg-secondaryHighlight ${
-                  initTime.current === initTimes.current[1]
-                    ? "bg-secondaryLowlight"
-                    : ""
-                }`}
-                onClick={() => setInitTime(initTimes.current[1])}
-              >
-                60
-              </p>
-              <p
-                className={`hover:bg-secondaryHighlight ${
-                  initTime.current === initTimes.current[2]
-                    ? "bg-secondaryLowlight"
-                    : ""
-                }`}
-                onClick={() => setInitTime(initTimes.current[2])}
-              >
-                90
-              </p>
+                <p
+                  className={`hover:bg-secondaryHighlight ${
+                    initTime.current === initTimes.current[0]
+                      ? "bg-secondaryLowlight"
+                      : ""
+                  }`}
+                  onClick={() => setInitTime(initTimes.current[0])}
+                >
+                  30
+                </p>
+                <p
+                  className={`hover:bg-secondaryHighlight ${
+                    initTime.current === initTimes.current[1]
+                      ? "bg-secondaryLowlight"
+                      : ""
+                  }`}
+                  onClick={() => setInitTime(initTimes.current[1])}
+                >
+                  60
+                </p>
+                <p
+                  className={`hover:bg-secondaryHighlight ${
+                    initTime.current === initTimes.current[2]
+                      ? "bg-secondaryLowlight"
+                      : ""
+                  }`}
+                  onClick={() => setInitTime(initTimes.current[2])}
+                >
+                  90
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-row items-end space-x-2">
+              <p>{calcTime()}</p>
+              <p className="text-lg text-secondary">wpm</p>
             </div>
           </div>
 
-          <div className="flex flex-row items-end space-x-2">
-            <p>{calcTime()}</p>
-            <p className="text-lg text-secondary">wpm</p>
-          </div>
-        </div>
-
-        <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
-          {trueText.current.map((ch, idx) => (
-            <Letter
-              trueLetter={ch}
-              userLetter={userText[idx]}
-              isFrontLetter={idx === totalKeysPressed && !isPaused}
-              addKeyPress={addKeyPress}
-              removeKeyPress={removeKeyPress}
-              addErrorPress={addErrorPress}
-              key={idx}
+          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
+            {trueText.map((_, idx) => (
+              <Word wordPos={idx} />
+            ))}
+            <textarea
+              className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"
+              onChange={onTextChange}
+              ref={inputRef}
+              spellCheck={false}
+              disabled={!canType.current}
             />
-          ))}
-          <textarea
-            className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"
-            onChange={onTextChange}
-            ref={inputRef}
-            spellCheck={false}
-            disabled={!canType.current}
-          />
+          </div>
+          <a
+            className="self-center p-2 rounded-full hover:bg-secondaryLowlight"
+            href=""
+            onClick={reset}
+          >
+            <Image
+              className=""
+              src={"/redo.svg"}
+              alt="redo"
+              width={22}
+              height={22}
+            />
+          </a>
         </div>
-        <a
-          className="self-center p-2 rounded-full hover:bg-secondaryLowlight"
-          href=""
-          onClick={reset}
-        >
-          <Image
-            className=""
-            src={"/redo.svg"}
-            alt="redo"
-            width={22}
-            height={22}
-          />
-        </a>
-      </div>
 
-      <div></div>
+        <div></div>
+      </UserContext.Provider>
     </main>
   );
 }
