@@ -13,7 +13,7 @@ const Letter = ({ wordPos, letterPos }: props) => {
 
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
-  const trueLetter = useRef(trueWords[wordPos].trueWord[letterPos]);
+  const trueLetter = useRef(trueWords[wordPos][letterPos]);
   const letterTypeStates = useRef(letterStates[wordPos]);
 
   useEffect(() => {

@@ -5,21 +5,128 @@ import {
   MouseEvent,
   createContext,
   useEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
 
 import Image from "next/image";
 
-export const UserContext = createContext<ContextType>(null!);
+export const UserContext = createContext<StateType>(null!);
 
 import Word from "./components/Word";
-import { IWord, LetterTypeState, ContextType } from "./types/contextTypes";
+import {
+  IWord,
+  LetterTypeState,
+  ActionType,
+  StateType,
+  ACTION,
+} from "./types/contextTypes";
+
+const getNextLetterPostion = (
+  curWordPos: number,
+  curLetterPos: number,
+  curWordLen: number
+): [number, number] => {
+  if (curLetterPos >= curWordLen - 1) return [curWordPos + 1, 0];
+  else return [curWordPos, curLetterPos + 1];
+};
+
+const getPreviousLetterPostion = (
+  curWordPos: number,
+  curLetterPos: number,
+  prevWordLen: number
+): [number, number] => {
+  if (curLetterPos <= 0) return [curWordPos - 1, prevWordLen - 1];
+  else return [curWordPos, curLetterPos - 1];
+};
+
+const reducer = (state: StateType, action: ActionType): StateType => {
+  let curWordPos = state.frontPos[0];
+  let curLetterPos = state.frontPos[1];
+  switch (action.type) {
+    case ACTION.INIT: {
+      if (action.payload?.newState) return action.payload?.newState;
+      else throw Error("ERROR: INIT payload missing.");
+    }
+    case ACTION.ADD_CORRECT: {
+      let newLetterStates: LetterTypeState[][] = state.letterStates;
+      newLetterStates[curWordPos][curLetterPos] = LetterTypeState.CORRECT;
+      return {
+        ...state,
+        letterStates: newLetterStates,
+        frontPos: getNextLetterPostion(
+          curWordPos,
+          curLetterPos,
+          state.trueWords[curWordPos].length
+        ),
+      };
+    }
+    case ACTION.ADD_INCORRECT: {
+      let newLetterStates: LetterTypeState[][] = state.letterStates;
+      newLetterStates[curWordPos][curLetterPos] = LetterTypeState.INCORRECT;
+      return {
+        ...state,
+        letterStates: newLetterStates,
+        frontPos: getNextLetterPostion(
+          curWordPos,
+          curLetterPos,
+          state.trueWords[curWordPos].length
+        ),
+      };
+    }
+    case ACTION.REMOVE: {
+      let newLetterStates: LetterTypeState[][] = state.letterStates;
+      newLetterStates[curWordPos][curLetterPos] = LetterTypeState.NORMAL;
+      return {
+        ...state,
+        letterStates: newLetterStates,
+        frontPos: getPreviousLetterPostion(
+          curWordPos,
+          curLetterPos,
+          state.trueWords[curWordPos].length
+        ),
+      };
+    }
+    default:
+      throw Error(`ERROR: Action ${action.type} does not exist`);
+  }
+};
+
+const initialState: StateType = {
+  trueText: "Hello my friend",
+  userText: "",
+  trueWords: ["Hello ", "my ", "stinky ", "friend "],
+  letterStates: [[]],
+  frontPos: [0, 0],
+};
 
 export default function Home() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    let newTrueText =
+      "Lorem Ipsum is placeholder text used to fill this site with text that you can type vigorously.";
+    dispatch({
+      type: ACTION.INIT,
+      payload: {
+        newState: {
+          trueText: newTrueText,
+          userText: "",
+          trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
+          letterStates: newTrueText
+            .split(" ")
+            .map((word) => word.split("").map((_) => LetterTypeState.NORMAL)),
+          frontPos: [0, 0],
+        },
+      },
+    });
+  }, []);
+
   const inputRef = useRef<HTMLTextAreaElement>(null!);
+
   const [trueText, setTrueText] = useState<string[]>(
-    "Hello my friend".split(" ")
+    "Lorem Ipsum placeholder text".split(" ")
   );
   const [userText, setUserText] = useState<string[]>([]);
   const [trueWords, setTrueWords] = useState<IWord[]>(
@@ -171,16 +278,7 @@ export default function Home() {
       className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
       onClick={focusInputEl}
     >
-      <UserContext.Provider
-        value={{
-          trueWords: trueWords,
-          frontPos: [
-            trueWords.length,
-            trueWords[trueWords.length - 1].trueWord.length,
-          ],
-          letterStates: letterStates,
-        }}
-      >
+      <UserContext.Provider value={state}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
           <div className="flex space-x-3">
             <Image

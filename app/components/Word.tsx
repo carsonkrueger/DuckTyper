@@ -12,12 +12,9 @@ const Word = ({ wordPos }: props) => {
 
   return (
     <div className="flex flex-row flex-wrap">
-      {trueWords
-        .at(wordPos)
-        ?.trueWord.split("")
-        .map((_, letterPos) => (
-          <Letter wordPos={wordPos} letterPos={letterPos} key={letterPos} />
-        ))}
+      {trueWords[wordPos]?.split("").map((_, letterPos) => (
+        <Letter wordPos={wordPos} letterPos={letterPos} key={letterPos} />
+      ))}
     </div>
   );
 };
