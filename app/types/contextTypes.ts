@@ -26,14 +26,15 @@ export enum ACTION {
 export type ActionType = {
   type: ACTION;
   payload?: {
-    newState?: StateType;
+    newTrueText?: string;
   };
 };
 
 export type StateType = {
   trueText: string;
-  userText: string;
   trueWords: string[];
   letterStates: LetterTypeState[][];
   frontPos: [number, number];
+  correctLetters: number;
+  incorrectLetters: number;
 };

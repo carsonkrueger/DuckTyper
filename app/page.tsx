@@ -23,6 +23,19 @@ import {
   ACTION,
 } from "./types/contextTypes";
 
+const Initializer = (trueText: string): StateType => {
+  return {
+    trueText: trueText,
+    trueWords: trueText.split(" ").map((word) => word.concat(" ")),
+    letterStates: trueText
+      .split(" ")
+      .map((word) => word.split("").map((_) => LetterTypeState.NORMAL)),
+    frontPos: [0, 0],
+    correctLetters: 0,
+    incorrectLetters: 0,
+  };
+};
+
 const getNextLetterPostion = (
   curWordPos: number,
   curLetterPos: number,
@@ -46,11 +59,12 @@ const reducer = (state: StateType, action: ActionType): StateType => {
   let curLetterPos = state.frontPos[1];
   switch (action.type) {
     case ACTION.INIT: {
-      if (action.payload?.newState) return action.payload?.newState;
+      if (action.payload?.newTrueText)
+        return Initializer(action.payload?.newTrueText);
       else throw Error("ERROR: INIT payload missing.");
     }
     case ACTION.ADD_CORRECT: {
-      let newLetterStates: LetterTypeState[][] = state.letterStates;
+      let newLetterStates: LetterTypeState[][] = [...state.letterStates];
       newLetterStates[curWordPos][curLetterPos] = LetterTypeState.CORRECT;
       return {
         ...state,
@@ -60,10 +74,11 @@ const reducer = (state: StateType, action: ActionType): StateType => {
           curLetterPos,
           state.trueWords[curWordPos].length
         ),
+        correctLetters: state.correctLetters + 1,
       };
     }
     case ACTION.ADD_INCORRECT: {
-      let newLetterStates: LetterTypeState[][] = state.letterStates;
+      let newLetterStates: LetterTypeState[][] = [...state.letterStates];
       newLetterStates[curWordPos][curLetterPos] = LetterTypeState.INCORRECT;
       return {
         ...state,
@@ -73,78 +88,57 @@ const reducer = (state: StateType, action: ActionType): StateType => {
           curLetterPos,
           state.trueWords[curWordPos].length
         ),
+        incorrectLetters: state.correctLetters + 1,
       };
     }
     case ACTION.REMOVE: {
-      let newLetterStates: LetterTypeState[][] = state.letterStates;
-      newLetterStates[curWordPos][curLetterPos] = LetterTypeState.NORMAL;
+      let prevWordLen = 0;
+      if (curWordPos > 0) {
+        prevWordLen = state.trueWords[curWordPos - 1].length;
+      } else if (curWordPos <= 0) {
+        prevWordLen = state.trueWords[curWordPos].length;
+      }
+      const prevPosition = getPreviousLetterPostion(
+        curWordPos,
+        curLetterPos,
+        prevWordLen
+      );
+      const prevIsCorrect =
+        LetterTypeState.CORRECT ===
+        state.letterStates[prevPosition[0]][prevPosition[1]];
+      let newLetterStates: LetterTypeState[][] = [...state.letterStates];
+      newLetterStates[prevPosition[0]][prevPosition[1]] =
+        LetterTypeState.NORMAL;
       return {
         ...state,
         letterStates: newLetterStates,
-        frontPos: getPreviousLetterPostion(
-          curWordPos,
-          curLetterPos,
-          state.trueWords[curWordPos].length
-        ),
+        frontPos: prevPosition,
+        correctLetters: prevIsCorrect
+          ? state.correctLetters - 1
+          : state.correctLetters,
       };
+    }
+    case ACTION.RESET: {
+      if (state.trueText) return { ...Initializer(state.trueText) };
+      else throw Error("Initial state cannot be invalid when resetting.");
     }
     default:
       throw Error(`ERROR: Action ${action.type} does not exist`);
   }
 };
 
-const initialState: StateType = {
-  trueText: "Hello my friend",
-  userText: "",
-  trueWords: ["Hello ", "my ", "stinky ", "friend "],
-  letterStates: [[]],
-  frontPos: [0, 0],
-};
-
 export default function Home() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  useEffect(() => {
-    let newTrueText =
-      "Lorem Ipsum is placeholder text used to fill this site with text that you can type vigorously.";
-    dispatch({
-      type: ACTION.INIT,
-      payload: {
-        newState: {
-          trueText: newTrueText,
-          userText: "",
-          trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
-          letterStates: newTrueText
-            .split(" ")
-            .map((word) => word.split("").map((_) => LetterTypeState.NORMAL)),
-          frontPos: [0, 0],
-        },
-      },
-    });
-  }, []);
+  const initTrueText = useRef(
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged."
+  );
+  const [state, dispatch] = useReducer(
+    reducer,
+    initTrueText.current,
+    Initializer
+  );
 
   const inputRef = useRef<HTMLTextAreaElement>(null!);
-
-  const [trueText, setTrueText] = useState<string[]>(
-    "Lorem Ipsum placeholder text".split(" ")
-  );
-  const [userText, setUserText] = useState<string[]>([]);
-  const [trueWords, setTrueWords] = useState<IWord[]>(
-    trueText.map((word, idx) => ({
-      trueWord: word.concat(" "),
-      wordPos: idx,
-    }))
-  );
-  const [letterStates, setLetterStates] = useState<LetterTypeState[][]>(
-    trueWords.map((word) =>
-      word.trueWord.split("").map((_) => LetterTypeState.NORMAL)
-    )
-  );
-
-  const [totalKeysPressed, setTotalKeysPressed] = useState<number>(0);
-  const correctKeysPressed = useRef(0);
-  const errorsPressed = useRef(0);
-
+  const prevUserInputLength = useRef<number>(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
@@ -152,10 +146,6 @@ export default function Home() {
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
-
-  const curWordPos = useRef(0);
-  const curLetterPos = useRef(0);
-  const curWordLength = useRef(trueWords[curWordPos.current].trueWord.length);
 
   useEffect(() => {
     if (!isPaused) {
@@ -177,28 +167,19 @@ export default function Home() {
     const userText = e.target.value.split("");
     if (isPaused) setIsPaused(false);
 
-    const added = userText.length > totalKeysPressed;
-    setTotalKeysPressed(userText.length);
+    let didIncrease: boolean = userText.length > prevUserInputLength.current;
 
-    let newLetterStates = [...letterStates];
-    const isMatching =
-      trueText[curWordPos.current][curLetterPos.current] ===
-      userText[userText.length - 1];
+    if (didIncrease) {
+      const isMatching =
+        state.trueWords[state.frontPos[0]][state.frontPos[1]] ===
+        userText[userText.length - 1];
+      if (isMatching) dispatch({ type: ACTION.ADD_CORRECT });
+      else if (!isMatching) dispatch({ type: ACTION.ADD_INCORRECT });
+    } else if (!didIncrease) {
+      dispatch({ type: ACTION.REMOVE });
+    }
 
-    if (isMatching && added)
-      newLetterStates[curWordPos.current][curLetterPos.current] =
-        LetterTypeState.CORRECT;
-    else if (!isMatching && added)
-      newLetterStates[curWordPos.current][curLetterPos.current] =
-        LetterTypeState.INCORRECT;
-    else if (!added)
-      newLetterStates[curWordPos.current][curLetterPos.current] =
-        LetterTypeState.NORMAL;
-
-    console.log(letterStates);
-    setLetterStates(newLetterStates);
-
-    calcNextPosition(added);
+    prevUserInputLength.current = userText.length;
   };
 
   const setInitTime = (time: number) => {
@@ -206,36 +187,14 @@ export default function Home() {
     setTimer(initTime.current);
   };
 
-  const addCorrectKeyPress = () => {
-    correctKeysPressed.current++;
-  };
-
-  const removeCorrectKeyPress = () => {
-    correctKeysPressed.current--;
-  };
-
-  const addErrorKeyPress = () => {
-    errorsPressed.current++;
-  };
-
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
-    setIsPaused(true);
     if (e) e.preventDefault();
-    inputRef.current.value = "";
-    correctKeysPressed.current = 0;
-    errorsPressed.current = 0;
-    canType.current = true;
-    curWordPos.current = 0;
-    curLetterPos.current = 0;
-    curWordLength.current = trueWords[curWordPos.current].trueWord.length;
-    setTotalKeysPressed(0);
-    setUserText([]);
-    setLetterStates(
-      trueWords.map((word) =>
-        word.trueWord.split("").map((_) => LetterTypeState.NORMAL)
-      )
-    );
+    setIsPaused(true);
     setTimer(initTime.current);
+    dispatch({ type: ACTION.RESET });
+    inputRef.current.value = "";
+    canType.current = true;
+    prevUserInputLength.current = 0;
     focusInputEl();
   };
 
@@ -243,35 +202,18 @@ export default function Home() {
     inputRef.current.focus();
   };
 
-  const calcTime = (): string => {
+  const calcTime = () => {
     const time = (
-      (correctKeysPressed.current /
+      (state.correctLetters /
         lettersPerWord.current /
         (initTime.current - timer)) *
       60
     ).toFixed(0);
-    if (correctKeysPressed.current <= 0 || time === "Infinity") return "0";
+    if (state.correctLetters <= 0 || time === "Infinity") return "0";
     return time;
   };
 
-  // returns word, letter position
-  const calcNextPosition = (added: boolean) => {
-    if (added) {
-      curLetterPos.current++;
-      if (curLetterPos.current >= curWordLength.current) {
-        curWordPos.current++;
-        curWordLength.current = trueWords[curWordPos.current].trueWord.length;
-        curLetterPos.current = 0;
-      }
-    } else if (!added) {
-      curLetterPos.current--;
-      if (curLetterPos.current < 0) {
-        curWordPos.current--;
-        curWordLength.current = trueWords[curWordPos.current].trueWord.length;
-        curLetterPos.current = curWordLength.current - 1;
-      }
-    }
-  };
+  console.log(calcTime());
 
   return (
     <main
@@ -338,12 +280,16 @@ export default function Home() {
           </div>
 
           <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
-            {trueText.map((_, idx) => (
+            {state.trueWords.map((_, idx) => (
               <Word wordPos={idx} key={idx} />
             ))}
             <textarea
               className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"
               onChange={onTextChange}
+              onPaste={(e) => {
+                e.preventDefault();
+                return false;
+              }}
               ref={inputRef}
               spellCheck={false}
               disabled={!canType.current}

@@ -9,15 +9,14 @@ interface props {
 }
 
 const Letter = ({ wordPos, letterPos }: props) => {
-  const { trueWords, frontPos, letterStates } = useContext(UserContext);
+  const { letterStates, trueWords, frontPos } = useContext(UserContext);
 
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
   const trueLetter = useRef(trueWords[wordPos][letterPos]);
-  const letterTypeStates = useRef(letterStates[wordPos]);
 
   useEffect(() => {
-    switch (letterTypeStates.current[letterPos]) {
+    switch (letterStates[wordPos][letterPos]) {
       case LetterTypeState.CORRECT:
         setColor("text-gray-200");
         break;
@@ -30,13 +29,11 @@ const Letter = ({ wordPos, letterPos }: props) => {
         setColor("text-secondary");
         break;
     }
-  }, [letterStates]);
 
-  useEffect(() => {
-    if (frontPos[0] === wordPos && frontPos[1] === letterPos)
-      setBorder("border-l-primary");
+    const isFront = frontPos[0] === wordPos && frontPos[1] === letterPos;
+    if (isFront) setBorder("border-l-primary");
     else setBorder("border-l-dark");
-  }, [frontPos]);
+  }, [letterStates]);
 
   return (
     <div
