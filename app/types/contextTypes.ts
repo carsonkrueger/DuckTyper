@@ -21,12 +21,15 @@ export enum ACTION {
   REMOVE,
   RESET,
   INIT,
+  NEW_LINE,
+  PREV_LINE,
 }
 
 export type ActionType = {
   type: ACTION;
   payload?: {
     newTrueText?: string;
+    lineHeight?: number;
   };
 };
 
@@ -37,4 +40,5 @@ export type StateType = {
   frontPos: [number, number];
   correctLetters: number;
   incorrectLetters: number;
+  curLineHeight: number;
 };

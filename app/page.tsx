@@ -27,12 +27,16 @@ const Initializer = (trueText: string): StateType => {
   return {
     trueText: trueText,
     trueWords: trueText.split(" ").map((word) => word.concat(" ")),
-    letterStates: trueText
-      .split(" ")
-      .map((word) => word.split("").map((_) => LetterTypeState.NORMAL)),
+    letterStates: trueText.split(" ").map((word) =>
+      word
+        .concat(" ")
+        .split("")
+        .map((_) => LetterTypeState.NORMAL)
+    ),
     frontPos: [0, 0],
     correctLetters: 0,
     incorrectLetters: 0,
+    curLineHeight: 0,
   };
 };
 
@@ -122,6 +126,14 @@ const reducer = (state: StateType, action: ActionType): StateType => {
       if (state.trueText) return { ...Initializer(state.trueText) };
       else throw Error("Initial state cannot be invalid when resetting.");
     }
+    case ACTION.NEW_LINE: {
+      if (action.payload?.lineHeight != undefined)
+        return {
+          ...state,
+          curLineHeight: action.payload?.lineHeight,
+        };
+      else throw Error("Payload line height is missing.");
+    }
     default:
       throw Error(`ERROR: Action ${action.type} does not exist`);
   }
@@ -137,8 +149,9 @@ export default function Home() {
     Initializer
   );
 
-  const inputRef = useRef<HTMLTextAreaElement>(null!);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null!);
   const prevUserInputLength = useRef<number>(0);
+  const prevLineHeight = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
@@ -185,6 +198,7 @@ export default function Home() {
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
+    focusInputEl();
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
@@ -192,14 +206,14 @@ export default function Home() {
     setIsPaused(true);
     setTimer(initTime.current);
     dispatch({ type: ACTION.RESET });
-    inputRef.current.value = "";
+    textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
     focusInputEl();
   };
 
   const focusInputEl = () => {
-    inputRef.current.focus();
+    textAreaRef.current.focus();
   };
 
   const calcTime = () => {
@@ -212,8 +226,6 @@ export default function Home() {
     if (state.correctLetters <= 0 || time === "Infinity") return "0";
     return time;
   };
-
-  console.log(calcTime());
 
   return (
     <main
@@ -281,16 +293,16 @@ export default function Home() {
 
           <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
             {state.trueWords.map((_, idx) => (
-              <Word wordPos={idx} key={idx} />
+              <Word wordPos={idx} dispatch={dispatch} key={idx} />
             ))}
             <textarea
-              className="absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer"
+              className={`translate-y-[110px] overflow-hidden absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
                 return false;
               }}
-              ref={inputRef}
+              ref={textAreaRef}
               spellCheck={false}
               disabled={!canType.current}
             />
@@ -300,13 +312,7 @@ export default function Home() {
             href=""
             onClick={reset}
           >
-            <Image
-              className=""
-              src={"/redo.svg"}
-              alt="redo"
-              width={22}
-              height={22}
-            />
+            <Image src={"/redo.svg"} alt="redo" width={22} height={22} />
           </a>
         </div>
 
