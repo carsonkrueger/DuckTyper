@@ -295,12 +295,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-hidden">
+          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word wordPos={idx} dispatch={dispatch} key={idx} />
             ))}
             <textarea
-              className={`overflow-hidden absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
+              className={`absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
