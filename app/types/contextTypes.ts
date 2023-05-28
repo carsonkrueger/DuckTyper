@@ -1,3 +1,5 @@
+import { JsxElement } from "typescript";
+
 export enum LetterTypeState {
   NORMAL,
   CORRECT,
@@ -9,19 +11,16 @@ export interface IWord {
   trueWord: string;
 }
 
-// export type ContextType = {
-//   trueWords: IWord[];
-//   letterStates: LetterTypeState[][];
-//   frontPos: [number, number];
-// };
-
 export enum ACTION {
   ADD_CORRECT,
   ADD_INCORRECT,
   REMOVE,
   RESET,
   INIT,
-  NEW_LINE,
+}
+
+export enum VIEW_ACTION {
+  NEXT_LINE,
   PREV_LINE,
 }
 
@@ -33,6 +32,11 @@ export type ActionType = {
   };
 };
 
+export type ViewActionType = {
+  type: VIEW_ACTION;
+  payload?: {};
+};
+
 export type StateType = {
   trueText: string;
   trueWords: string[];
@@ -40,5 +44,10 @@ export type StateType = {
   frontPos: [number, number];
   correctLetters: number;
   incorrectLetters: number;
+};
+
+export type ViewStateType = {
+  wordPos: number;
+  prevLineHeight: number;
   curLineHeight: number;
 };

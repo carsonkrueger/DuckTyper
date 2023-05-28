@@ -1,33 +1,34 @@
-import { Dispatch, useContext, useEffect, useRef } from "react";
+import { Dispatch, forwardRef, useContext, useEffect } from "react";
 import { UserContext } from "../page";
 
 import Letter from "./Letter";
-import { ACTION, ActionType } from "../types/contextTypes";
+import { ActionType, ViewActionType, VIEW_ACTION } from "../types/contextTypes";
 
 interface props {
   wordPos: number;
-  dispatch: Dispatch<ActionType>;
+  viewDispatch: Dispatch<ViewActionType>;
 }
 
-const Word = ({ wordPos, dispatch }: props) => {
-  const { trueWords, frontPos, curLineHeight } = useContext(UserContext);
-  const wordRef = useRef<HTMLDivElement>(null);
+const Word = forwardRef<HTMLDivElement, props>(
+  ({ wordPos, viewDispatch }: props, ref) => {
+    const { trueWords, frontPos, curLineHeight } = useContext(UserContext);
 
-  useEffect(() => {
-    if (curLineHeight != wordRef.current?.offsetTop)
-      dispatch({
-        type: ACTION.NEW_LINE,
-        payload: { lineHeight: wordRef.current?.offsetTop },
-      });
-  }, [frontPos]);
+    useEffect(() => {
+      if (curLineHeight != ref?.offsetTop)
+        viewDispatch({
+          type: VIEW_ACTION.NEXT_LINE,
+          payload: { lineHeight: ref?.offsetTop },
+        });
+    }, [frontPos]);
 
-  return (
-    <div ref={wordRef} className="flex flex-row flex-wrap">
-      {trueWords[wordPos]?.split("").map((_, letterPos) => (
-        <Letter wordPos={wordPos} letterPos={letterPos} key={letterPos} />
-      ))}
-    </div>
-  );
-};
+    return (
+      <div ref={ref} className="flex flex-row flex-wrap">
+        {trueWords[wordPos]?.split("").map((_, letterPos) => (
+          <Letter wordPos={wordPos} letterPos={letterPos} key={letterPos} />
+        ))}
+      </div>
+    );
+  }
+);
 
 export default Word;
