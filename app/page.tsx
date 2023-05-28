@@ -161,6 +161,10 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState<boolean>(true);
 
   useEffect(() => {
+    focusInputEl();
+  }, []);
+
+  useEffect(() => {
     if (!isPaused) {
       const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
@@ -296,7 +300,7 @@ export default function Home() {
               <Word wordPos={idx} dispatch={dispatch} key={idx} />
             ))}
             <textarea
-              className={`translate-y-[110px] overflow-hidden absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
+              className={`overflow-hidden absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
