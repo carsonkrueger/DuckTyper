@@ -17,11 +17,7 @@ export enum ACTION {
   REMOVE,
   RESET,
   INIT,
-}
-
-export enum VIEW_ACTION {
-  NEXT_LINE,
-  PREV_LINE,
+  SET_LINE_HEIGHT,
 }
 
 export type ActionType = {
@@ -32,11 +28,6 @@ export type ActionType = {
   };
 };
 
-export type ViewActionType = {
-  type: VIEW_ACTION;
-  payload?: {};
-};
-
 export type StateType = {
   trueText: string;
   trueWords: string[];
@@ -44,10 +35,5 @@ export type StateType = {
   frontPos: [number, number];
   correctLetters: number;
   incorrectLetters: number;
-};
-
-export type ViewStateType = {
-  wordPos: number;
-  prevLineHeight: number;
   curLineHeight: number;
 };

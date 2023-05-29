@@ -14,7 +14,7 @@ import {
 
 import Image from "next/image";
 
-export const UserContext = createContext<StateType & ViewStateType>(null!);
+export const UserContext = createContext<StateType>(null!);
 
 import Word from "./components/Word";
 import {
@@ -22,9 +22,6 @@ import {
   ActionType,
   StateType,
   ACTION,
-  ViewStateType,
-  ViewActionType,
-  VIEW_ACTION,
 } from "./types/contextTypes";
 
 const Initializer = (trueText: string): StateType => {
@@ -40,13 +37,6 @@ const Initializer = (trueText: string): StateType => {
     frontPos: [0, 0],
     correctLetters: 0,
     incorrectLetters: 0,
-  };
-};
-
-const viewInitializer = (): ViewStateType => {
-  return {
-    wordPos: 0,
-    prevLineHeight: 0,
     curLineHeight: 0,
   };
 };
@@ -137,7 +127,7 @@ const reducer = (state: StateType, action: ActionType): StateType => {
       if (state.trueText) return { ...Initializer(state.trueText) };
       else throw Error("Initial state cannot be invalid when resetting.");
     }
-    case ACTION.NEW_LINE: {
+    case ACTION.SET_LINE_HEIGHT: {
       if (action.payload?.lineHeight != undefined)
         return {
           ...state,
@@ -150,27 +140,6 @@ const reducer = (state: StateType, action: ActionType): StateType => {
   }
 };
 
-const viewReducer = (
-  viewState: ViewStateType,
-  viewAction: ViewActionType
-): ViewStateType => {
-  switch (viewAction.type) {
-    case VIEW_ACTION.NEXT_LINE: {
-      return {
-        ...viewState,
-      };
-    }
-    case VIEW_ACTION.PREV_LINE: {
-      return {
-        ...viewState,
-      };
-    }
-    default: {
-      throw Error("View action does not exist");
-    }
-  }
-};
-
 export default function Home() {
   const initTrueText = useRef(
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged."
@@ -179,11 +148,6 @@ export default function Home() {
     reducer,
     initTrueText.current,
     Initializer
-  );
-  const [viewState, viewDispatch] = useReducer(
-    viewReducer,
-    null,
-    viewInitializer
   );
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null!);
@@ -213,8 +177,6 @@ export default function Home() {
       }, 1000);
       return () => clearInterval(interval);
     }
-    console.log(wordsRef.current);
-    wordsRef.current[wordsRef.current.length - 1]?.scrollIntoView();
   }, [isPaused]);
 
   useEffect(() => {
@@ -223,6 +185,19 @@ export default function Home() {
       setIsPaused(true);
     }
   }, [timer]);
+
+  useEffect(() => {
+    const offset = wordsRef.current[state.frontPos[0]]?.offsetTop;
+    if (!offset) return;
+
+    if (state.curLineHeight != offset) {
+      dispatch({
+        type: ACTION.SET_LINE_HEIGHT,
+        payload: { lineHeight: offset },
+      });
+      wordsRef.current[state.frontPos[0]]?.scrollIntoView(true);
+    }
+  }, [state.frontPos]);
 
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const userText = e.target.value.split("");
@@ -280,7 +255,7 @@ export default function Home() {
       className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
       onClick={focusInputEl}
     >
-      <UserContext.Provider value={{ ...state, ...viewState }}>
+      <UserContext.Provider value={state}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
           <div className="flex space-x-3">
             <Image
@@ -339,7 +314,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.5rem] overflow-y-scroll scrollbar">
+          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.2rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {
@@ -347,12 +322,11 @@ export default function Home() {
                   return el;
                 }}
                 wordPos={idx}
-                dispatch={dispatch}
                 key={idx}
               />
             ))}
             <textarea
-              className={`absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer`}
+              className={`absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
