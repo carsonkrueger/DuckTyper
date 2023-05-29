@@ -1,5 +1,3 @@
-import { JsxElement } from "typescript";
-
 export enum LetterTypeState {
   NORMAL,
   CORRECT,

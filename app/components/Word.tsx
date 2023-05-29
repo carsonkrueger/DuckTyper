@@ -1,8 +1,7 @@
-import { Dispatch, forwardRef, useContext } from "react";
+import { forwardRef, useContext } from "react";
 import { UserContext } from "../page";
 
 import Letter from "./Letter";
-import { ViewActionType } from "../types/contextTypes";
 
 interface props {
   wordPos: number;
