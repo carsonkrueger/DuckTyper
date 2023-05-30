@@ -1,14 +1,21 @@
-import { forwardRef, useContext } from "react";
+import { forwardRef, useContext, useEffect, useRef } from "react";
 import { UserContext } from "../page";
 
 import Letter from "./Letter";
+import { StateType } from "../types/contextTypes";
 
 interface props {
   wordPos: number;
 }
 
 const Word = forwardRef<HTMLDivElement, props>(({ wordPos }: props, ref) => {
-  const { trueWords } = useContext(UserContext);
+  const { trueWords } = useContext(UserContext) as StateType;
+  // const trueWord = useRef<string>("");
+
+  // useEffect(() => {
+  //   if (trueWords[wordPos] != undefined)
+  //     trueWord.current = trueWords[wordPos];
+  // }, [trueWords])
 
   return (
     <div ref={ref} className="flex flex-row flex-wrap">
@@ -18,5 +25,6 @@ const Word = forwardRef<HTMLDivElement, props>(({ wordPos }: props, ref) => {
     </div>
   );
 });
+Word.displayName = "Word";
 
 export default Word;

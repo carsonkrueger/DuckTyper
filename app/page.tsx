@@ -12,7 +12,7 @@ import {
 
 import Image from "next/image";
 
-export const UserContext = createContext<StateType>(null!);
+export const UserContext = createContext<StateType | null>(null);
 
 import Word from "./components/Word";
 import {
@@ -153,9 +153,7 @@ export default function Home() {
     Array(state.trueWords.length)
   );
 
-  const curWordPos = useRef(0);
   const prevUserInputLength = useRef(0);
-  const prevLineHeight = useRef(0);
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 

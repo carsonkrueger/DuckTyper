@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "../page";
 
-import { LetterTypeState } from "../types/contextTypes";
+import { LetterTypeState, StateType } from "../types/contextTypes";
 
 interface props {
   wordPos: number;
@@ -9,7 +9,9 @@ interface props {
 }
 
 const Letter = ({ wordPos, letterPos }: props) => {
-  const { letterStates, trueWords, frontPos } = useContext(UserContext);
+  const { letterStates, trueWords, frontPos } = useContext(
+    UserContext
+  ) as StateType;
 
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
