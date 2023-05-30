@@ -191,7 +191,7 @@ export default function Home() {
         type: ACTION.SET_LINE_HEIGHT,
         payload: { lineHeight: offset },
       });
-      wordsRef.current[state.frontPos[0]]?.scrollIntoView(true);
+      wordsRef.current[state.frontPos[0]]?.scrollIntoView({ inline: "end" });
     }
   }, [state.frontPos]);
 
@@ -310,7 +310,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.2rem] overflow-y-scroll scrollbar">
+          <div className="border relative flex flex-wrap text-2xl select-none max-h-[10rem] md:max-h-[6rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {

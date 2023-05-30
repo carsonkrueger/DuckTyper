@@ -18,7 +18,7 @@ const Word = forwardRef<HTMLDivElement, props>(({ wordPos }: props, ref) => {
   // }, [trueWords])
 
   return (
-    <div ref={ref} className="flex flex-row flex-wrap">
+    <div ref={ref} className="border border-orange-800 flex flex-row flex-wrap">
       {trueWords[wordPos]?.split("").map((_, letterPos) => (
         <Letter wordPos={wordPos} letterPos={letterPos} key={letterPos} />
       ))}
