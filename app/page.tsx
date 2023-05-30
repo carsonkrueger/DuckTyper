@@ -42,10 +42,13 @@ const Initializer = (trueText: string): StateType => {
 const getNextLetterPostion = (
   curWordPos: number,
   curLetterPos: number,
-  curWordLen: number
+  curWordLen: number,
+  totalWords: number
 ): [number, number] => {
-  if (curLetterPos >= curWordLen - 1) return [curWordPos + 1, 0];
-  else return [curWordPos, curLetterPos + 1];
+  if (curLetterPos >= curWordLen - 1) {
+    if (curWordPos >= totalWords - 1) return [curWordPos, curLetterPos]; // cannot go forward further
+    return [curWordPos + 1, 0];
+  } else return [curWordPos, curLetterPos + 1];
 };
 
 const getPreviousLetterPostion = (
@@ -53,8 +56,10 @@ const getPreviousLetterPostion = (
   curLetterPos: number,
   prevWordLen: number
 ): [number, number] => {
-  if (curLetterPos <= 0) return [curWordPos - 1, prevWordLen - 1];
-  else return [curWordPos, curLetterPos - 1];
+  if (curLetterPos <= 0) {
+    if (curWordPos <= 0) return [curWordPos, curLetterPos]; // cannot go back further
+    return [curWordPos - 1, prevWordLen - 1];
+  } else return [curWordPos, curLetterPos - 1];
 };
 
 const reducer = (state: StateType, action: ActionType): StateType => {
@@ -75,7 +80,8 @@ const reducer = (state: StateType, action: ActionType): StateType => {
         frontPos: getNextLetterPostion(
           curWordPos,
           curLetterPos,
-          state.trueWords[curWordPos].length
+          state.trueWords[curWordPos].length,
+          state.trueWords.length
         ),
         correctLetters: state.correctLetters + 1,
       };
@@ -89,7 +95,8 @@ const reducer = (state: StateType, action: ActionType): StateType => {
         frontPos: getNextLetterPostion(
           curWordPos,
           curLetterPos,
-          state.trueWords[curWordPos].length
+          state.trueWords[curWordPos].length,
+          state.trueWords.length
         ),
         incorrectLetters: state.correctLetters + 1,
       };
@@ -201,7 +208,7 @@ export default function Home() {
     const userText = e.target.value.split("");
     if (isPaused) setIsPaused(false);
 
-    let didIncrease: boolean = userText.length > prevUserInputLength.current;
+    let didIncrease: boolean = userText.length >= prevUserInputLength.current;
 
     if (didIncrease) {
       const isMatching =
@@ -226,15 +233,16 @@ export default function Home() {
     if (e) e.preventDefault();
     setIsPaused(true);
     setTimer(initTime.current);
-    dispatch({ type: ACTION.RESET });
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
+    dispatch({ type: ACTION.RESET });
     focusInputEl();
   };
 
-  const focusInputEl = () => {
-    textAreaRef.current.focus();
+  const focusInputEl = (e?: MouseEvent) => {
+    if (e) e.preventDefault();
+    textAreaRef.current.focus({ preventScroll: true });
   };
 
   const calcTime = () => {
@@ -250,8 +258,8 @@ export default function Home() {
 
   return (
     <main
-      className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
-      onClick={focusInputEl}
+      className="flex flex-col min-h-screen items-center justify-between p-2 sm:p-10 bg-dark text-secondary font-roboto-mono"
+      onClick={(e) => focusInputEl(e)}
     >
       <UserContext.Provider value={state}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
@@ -312,7 +320,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative flex flex-wrap text-2xl select-none max-h-[6.2rem] overflow-y-scroll scrollbar">
+          <div className=" flex flex-wrap text-2xl select-none max-h-[6.2rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {
@@ -324,7 +332,7 @@ export default function Home() {
               />
             ))}
             <textarea
-              className={`absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
+              className={`fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
