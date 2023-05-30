@@ -17,6 +17,8 @@ module.exports = {
       },
       fontFamily: {
         "roboto-mono": ["Roboto Mono", "monospace"],
+        "Shadows-Into-Light": ["Shadows Into Light", "cursive"],
+        pacifico: ["Pacifico", "cursive"],
       },
     },
   },

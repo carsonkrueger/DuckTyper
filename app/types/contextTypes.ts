@@ -21,7 +21,7 @@ export enum ACTION {
 export type ActionType = {
   type: ACTION;
   payload?: {
-    newTrueText?: string;
+    newNumWords?: number;
     lineHeight?: number;
   };
 };

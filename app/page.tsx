@@ -4,6 +4,7 @@ import {
   ChangeEvent,
   MouseEvent,
   createContext,
+  useCallback,
   useEffect,
   useReducer,
   useRef,
@@ -12,6 +13,7 @@ import {
 
 import Image from "next/image";
 
+const randomWords = require("random-words");
 export const UserContext = createContext<StateType | null>(null);
 
 import Word from "./components/Word";
@@ -22,11 +24,18 @@ import {
   ACTION,
 } from "./types/contextTypes";
 
-const Initializer = (trueText: string): StateType => {
+const Initializer = (numWords: number): StateType => {
+  const newTrueText: string = randomWords({
+    exactly: 1,
+    wordsPerString: numWords,
+    join: " ",
+    maxLength: 8,
+  });
+  console.log(newTrueText);
   return {
-    trueText: trueText,
-    trueWords: trueText.split(" ").map((word) => word.concat(" ")),
-    letterStates: trueText.split(" ").map((word) =>
+    trueText: newTrueText,
+    trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
+    letterStates: newTrueText.split(" ").map((word) =>
       word
         .concat(" ")
         .split("")
@@ -42,10 +51,13 @@ const Initializer = (trueText: string): StateType => {
 const getNextLetterPostion = (
   curWordPos: number,
   curLetterPos: number,
-  curWordLen: number
+  curWordLen: number,
+  totalWords: number
 ): [number, number] => {
-  if (curLetterPos >= curWordLen - 1) return [curWordPos + 1, 0];
-  else return [curWordPos, curLetterPos + 1];
+  if (curLetterPos >= curWordLen - 1) {
+    if (curWordPos >= totalWords - 1) return [curWordPos, curLetterPos]; // cannot go forward further
+    return [curWordPos + 1, 0];
+  } else return [curWordPos, curLetterPos + 1];
 };
 
 const getPreviousLetterPostion = (
@@ -53,8 +65,10 @@ const getPreviousLetterPostion = (
   curLetterPos: number,
   prevWordLen: number
 ): [number, number] => {
-  if (curLetterPos <= 0) return [curWordPos - 1, prevWordLen - 1];
-  else return [curWordPos, curLetterPos - 1];
+  if (curLetterPos <= 0) {
+    if (curWordPos <= 0) return [curWordPos, curLetterPos]; // cannot go back further
+    return [curWordPos - 1, prevWordLen - 1];
+  } else return [curWordPos, curLetterPos - 1];
 };
 
 const reducer = (state: StateType, action: ActionType): StateType => {
@@ -62,8 +76,8 @@ const reducer = (state: StateType, action: ActionType): StateType => {
   let curLetterPos = state.frontPos[1];
   switch (action.type) {
     case ACTION.INIT: {
-      if (action.payload?.newTrueText)
-        return Initializer(action.payload?.newTrueText);
+      if (action.payload?.newNumWords)
+        return Initializer(action.payload.newNumWords);
       else throw Error("ERROR: INIT payload missing.");
     }
     case ACTION.ADD_CORRECT: {
@@ -75,7 +89,8 @@ const reducer = (state: StateType, action: ActionType): StateType => {
         frontPos: getNextLetterPostion(
           curWordPos,
           curLetterPos,
-          state.trueWords[curWordPos].length
+          state.trueWords[curWordPos].length,
+          state.trueWords.length
         ),
         correctLetters: state.correctLetters + 1,
       };
@@ -89,7 +104,8 @@ const reducer = (state: StateType, action: ActionType): StateType => {
         frontPos: getNextLetterPostion(
           curWordPos,
           curLetterPos,
-          state.trueWords[curWordPos].length
+          state.trueWords[curWordPos].length,
+          state.trueWords.length
         ),
         incorrectLetters: state.correctLetters + 1,
       };
@@ -122,8 +138,24 @@ const reducer = (state: StateType, action: ActionType): StateType => {
       };
     }
     case ACTION.RESET: {
-      if (state.trueText) return { ...Initializer(state.trueText) };
-      else throw Error("Initial state cannot be invalid when resetting.");
+      if (state.trueText)
+        return {
+          ...state,
+          letterStates: state.trueText.split(" ").map((word) =>
+            word
+              .concat(" ")
+              .split("")
+              .map((_) => LetterTypeState.NORMAL)
+          ),
+          frontPos: [0, 0],
+          correctLetters: 0,
+          incorrectLetters: 0,
+          curLineHeight: 0,
+        };
+      else
+        throw Error(
+          "Initial state true text cannot be invalid when resetting."
+        );
     }
     case ACTION.SET_LINE_HEIGHT: {
       if (action.payload?.lineHeight != undefined)
@@ -139,14 +171,7 @@ const reducer = (state: StateType, action: ActionType): StateType => {
 };
 
 export default function Home() {
-  const initTrueText = useRef(
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged."
-  );
-  const [state, dispatch] = useReducer(
-    reducer,
-    initTrueText.current,
-    Initializer
-  );
+  const [state, dispatch] = useReducer(reducer, 70, Initializer);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null!);
   const wordsRef = useRef<(HTMLDivElement | null)[]>(
@@ -157,7 +182,7 @@ export default function Home() {
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
-  const initTimes = useRef([30, 60, 90]);
+  const initTimes = useRef([15, 30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
@@ -187,11 +212,11 @@ export default function Home() {
     if (!offset) return;
 
     if (state.curLineHeight != offset) {
+      if (state.curLineHeight != 0) scrollToNextWord(); // skip first scroll
       dispatch({
         type: ACTION.SET_LINE_HEIGHT,
         payload: { lineHeight: offset },
       });
-      wordsRef.current[state.frontPos[0]]?.scrollIntoView({ inline: "end" });
     }
   }, [state.frontPos]);
 
@@ -199,7 +224,7 @@ export default function Home() {
     const userText = e.target.value.split("");
     if (isPaused) setIsPaused(false);
 
-    let didIncrease: boolean = userText.length > prevUserInputLength.current;
+    let didIncrease: boolean = userText.length >= prevUserInputLength.current;
 
     if (didIncrease) {
       const isMatching =
@@ -220,19 +245,36 @@ export default function Home() {
     focusInputEl();
   };
 
-  const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
-    if (e) e.preventDefault();
+  const newGame = (e?: MouseEvent<HTMLAnchorElement>) => {
+    dispatch({ type: ACTION.INIT, payload: { newNumWords: 70 } });
     setIsPaused(true);
     setTimer(initTime.current);
-    dispatch({ type: ACTION.RESET });
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
+    wordsRef.current[0]?.scrollIntoView({ block: "center" });
     focusInputEl();
   };
 
-  const focusInputEl = () => {
-    textAreaRef.current.focus();
+  const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
+    if (e) e.preventDefault();
+    dispatch({ type: ACTION.RESET });
+    setIsPaused(true);
+    setTimer(initTime.current);
+    textAreaRef.current.value = "";
+    canType.current = true;
+    prevUserInputLength.current = 0;
+    wordsRef.current[0]?.scrollIntoView({ block: "center" });
+    focusInputEl();
+  };
+
+  const focusInputEl = (e?: MouseEvent) => {
+    if (e) e.preventDefault();
+    textAreaRef.current.focus({ preventScroll: true });
+  };
+
+  const scrollToNextWord = () => {
+    wordsRef.current[state.frontPos[0]]?.scrollIntoView({ block: "center" });
   };
 
   const calcTime = () => {
@@ -248,8 +290,8 @@ export default function Home() {
 
   return (
     <main
-      className="flex flex-col min-h-screen items-center justify-between p-10 bg-dark text-secondary font-roboto-mono"
-      onClick={focusInputEl}
+      className="flex flex-col min-h-screen items-center justify-between p-2 sm:p-10 bg-dark text-secondary font-roboto-mono"
+      onClick={(e) => focusInputEl(e)}
     >
       <UserContext.Provider value={state}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
@@ -260,7 +302,7 @@ export default function Home() {
               width={30}
               height={30}
             />
-            <p>DuckTyper</p>
+            <p className="font-Shadows-Into-Light">DuckTyper</p>
           </div>
 
           <div></div>
@@ -310,7 +352,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="border relative flex flex-wrap text-2xl select-none max-h-[10rem] md:max-h-[6rem] overflow-y-scroll scrollbar">
+          <div className=" relative flex flex-wrap text-2xl select-none max-h-[10rem] md:max-h-[6rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {
@@ -322,7 +364,7 @@ export default function Home() {
               />
             ))}
             <textarea
-              className={`absolute min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
+              className={`fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
@@ -333,13 +375,22 @@ export default function Home() {
               disabled={!canType.current}
             />
           </div>
-          <a
-            className="self-center p-2 rounded-full hover:bg-secondaryLowlight"
-            href=""
-            onClick={reset}
-          >
-            <Image src={"/redo.svg"} alt="redo" width={22} height={22} />
-          </a>
+          <div className="flex justify-center space-x-10 py-2 [&>a]:p-2">
+            <a
+              className="rounded-full hover:bg-secondaryLowlight"
+              href=""
+              onClick={reset}
+            >
+              <Image src={"/redo.svg"} alt="redo" width={22} height={22} />
+            </a>
+            <a
+              className="rounded-full hover:bg-secondaryLowlight"
+              href=""
+              onClick={newGame}
+            >
+              <Image src={"/next.svg"} alt="next" width={22} height={22} />
+            </a>
+          </div>
         </div>
 
         <div></div>

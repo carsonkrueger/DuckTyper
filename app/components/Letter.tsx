@@ -39,7 +39,7 @@ const Letter = ({ wordPos, letterPos }: props) => {
 
   return (
     <div
-      className={`my-1 border border-blue-600 border-l-[1px] border-b-[1px] border-b-dark ${border} ${color}`}
+      className={` border-l-[1px] border-b-[1px] border-b-dark ${border} ${color}`}
     >
       {trueLetter.current === " " ? <>&nbsp;</> : trueLetter.current}
     </div>
