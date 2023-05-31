@@ -4,7 +4,6 @@ import {
   ChangeEvent,
   MouseEvent,
   createContext,
-  useCallback,
   useEffect,
   useReducer,
   useRef,
@@ -25,13 +24,12 @@ import {
 } from "./types/contextTypes";
 
 const Initializer = (numWords: number): StateType => {
-  const newTrueText: string = randomWords({
+  let newTrueText: string = randomWords({
     exactly: 1,
     wordsPerString: numWords,
     join: " ",
     maxLength: 8,
   });
-  console.log(newTrueText);
   return {
     trueText: newTrueText,
     trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
@@ -170,8 +168,18 @@ const reducer = (state: StateType, action: ActionType): StateType => {
   }
 };
 
+const initialState: StateType = {
+  trueText: " ",
+  trueWords: [" "],
+  letterStates: [[LetterTypeState.NORMAL]],
+  frontPos: [0, 0],
+  correctLetters: 0,
+  incorrectLetters: 0,
+  curLineHeight: 0,
+};
+
 export default function Home() {
-  const [state, dispatch] = useReducer(reducer, 70, Initializer);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null!);
   const wordsRef = useRef<(HTMLDivElement | null)[]>(
@@ -189,6 +197,7 @@ export default function Home() {
 
   useEffect(() => {
     focusInputEl();
+    dispatch({ type: ACTION.INIT, payload: { newNumWords: 70 } });
   }, []);
 
   useEffect(() => {
@@ -219,6 +228,10 @@ export default function Home() {
       });
     }
   }, [state.frontPos]);
+
+  useEffect(() => {
+    console.log(state.trueWords);
+  }, [state.trueWords]);
 
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const userText = e.target.value.split("");
@@ -293,7 +306,7 @@ export default function Home() {
       className="flex flex-col min-h-screen items-center justify-between p-2 sm:p-10 bg-dark text-secondary font-roboto-mono"
       onClick={(e) => focusInputEl(e)}
     >
-      <UserContext.Provider value={state}>
+      <UserContext.Provider value={state as StateType}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
           <div className="flex space-x-3">
             <Image
@@ -352,7 +365,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className=" relative flex flex-wrap text-2xl select-none max-h-[10rem] md:max-h-[6rem] overflow-y-scroll scrollbar">
+          <div className=" relative flex flex-wrap text-2xl select-none max-h-[6rem] overflow-y-scroll scrollbar">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {

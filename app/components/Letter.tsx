@@ -15,7 +15,6 @@ const Letter = ({ wordPos, letterPos }: props) => {
 
   const [color, setColor] = useState<string>("text-secondary");
   const [border, setBorder] = useState<string>("border-l-dark");
-  const trueLetter = useRef(trueWords[wordPos][letterPos]);
 
   useEffect(() => {
     switch (letterStates[wordPos][letterPos]) {
@@ -23,7 +22,7 @@ const Letter = ({ wordPos, letterPos }: props) => {
         setColor("text-gray-200");
         break;
       case LetterTypeState.INCORRECT:
-        if (trueLetter.current === " ")
+        if (trueWords[wordPos][letterPos] === " ")
           setColor("text-red-500 border-b-red-500");
         else setColor("text-red-500");
         break;
@@ -41,7 +40,11 @@ const Letter = ({ wordPos, letterPos }: props) => {
     <div
       className={` border-l-[1px] border-b-[1px] border-b-dark ${border} ${color}`}
     >
-      {trueLetter.current === " " ? <>&nbsp;</> : trueLetter.current}
+      {trueWords[wordPos][letterPos] === " " ? (
+        <>&nbsp;</>
+      ) : (
+        trueWords[wordPos][letterPos]
+      )}
     </div>
   );
 };
