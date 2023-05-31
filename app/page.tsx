@@ -22,6 +22,7 @@ const initialState: StateType = {
   frontPos: [0, 0],
   correctLetters: 0,
   incorrectLetters: 0,
+  lastLineBreak: 0,
   curLineHeight: 0,
 };
 
@@ -68,9 +69,10 @@ export default function Home() {
     if (!offset) return;
 
     if (state.curLineHeight != offset) {
-      if (state.curLineHeight != 0) scrollToNextWord(); // skip first scroll
+      // if (state.curLineHeight != 0) scrollToNextWord(); // skip first scroll
+      if (state.curLineHeight != 0) dispatch({ type: ACTION.CONSOLIDATE });
       dispatch({
-        type: ACTION.SET_LINE_HEIGHT,
+        type: ACTION.SET_NEW_LINE,
         payload: { lineHeight: offset },
       });
     }

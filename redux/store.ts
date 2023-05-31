@@ -29,6 +29,7 @@ const Initializer = (numWords: number): StateType => {
     frontPos: [0, 0],
     correctLetters: 0,
     incorrectLetters: 0,
+    lastLineBreak: 0,
     curLineHeight: 0,
   };
 };
@@ -126,6 +127,7 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
       if (state.trueText)
         return {
           ...state,
+          trueWords: state.trueText.split(" ").map((word) => word.concat(" ")),
           letterStates: state.trueText.split(" ").map((word) =>
             word
               .concat(" ")
@@ -135,6 +137,7 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
           frontPos: [0, 0],
           correctLetters: 0,
           incorrectLetters: 0,
+          lastLineBreak: 0,
           curLineHeight: 0,
         };
       else
@@ -142,13 +145,27 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
           "Initial state true text cannot be invalid when resetting."
         );
     }
-    case ACTION.SET_LINE_HEIGHT: {
+    case ACTION.SET_NEW_LINE: {
       if (action.payload?.lineHeight != undefined)
         return {
           ...state,
+          lastLineBreak: state.frontPos[0],
           curLineHeight: action.payload?.lineHeight,
         };
       else throw Error("Payload line height is missing.");
+    }
+    case ACTION.CONSOLIDATE: {
+      let newTrueWords = [...state.trueWords];
+      newTrueWords.splice(0, state.lastLineBreak);
+      let newLetterStates = [...state.letterStates];
+      newLetterStates.splice(0, state.lastLineBreak);
+      return {
+        ...state,
+        trueWords: newTrueWords,
+        letterStates: newLetterStates,
+        frontPos: [state.frontPos[0] - state.lastLineBreak, state.frontPos[1]],
+        lastLineBreak: 0,
+      };
     }
     default:
       throw Error(`ERROR: Action ${action.type} does not exist`);

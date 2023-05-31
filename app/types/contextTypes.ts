@@ -13,9 +13,10 @@ export enum ACTION {
   ADD_CORRECT,
   ADD_INCORRECT,
   REMOVE,
+  CONSOLIDATE,
   RESET,
   INIT,
-  SET_LINE_HEIGHT,
+  SET_NEW_LINE,
 }
 
 export type ActionType = {
@@ -33,5 +34,6 @@ export type StateType = {
   frontPos: [number, number];
   correctLetters: number;
   incorrectLetters: number;
+  lastLineBreak: number;
   curLineHeight: number;
 };
