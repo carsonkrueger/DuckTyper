@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { UserContext } from "../page";
+import { UserContext } from "@/redux/store";
 
 import { LetterTypeState, StateType } from "../types/contextTypes";
 

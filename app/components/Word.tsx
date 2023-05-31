@@ -1,5 +1,5 @@
 import { forwardRef, useContext, useEffect, useRef } from "react";
-import { UserContext } from "../page";
+import { UserContext } from "@/redux/store";
 
 import Letter from "./Letter";
 import { StateType } from "../types/contextTypes";
