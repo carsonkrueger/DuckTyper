@@ -45,7 +45,7 @@ export default function Home() {
 
   useEffect(() => {
     focusInputEl();
-    dispatch({ type: ACTION.INIT, payload: { newNumWords: 70 } });
+    dispatch({ type: ACTION.INIT });
   }, []);
 
   useEffect(() => {
@@ -66,11 +66,14 @@ export default function Home() {
 
   useEffect(() => {
     const offset = wordsRef.current[state.frontPos[0]]?.offsetTop;
-    if (!offset) return;
+    if (offset === undefined) return;
 
     if (state.curLineHeight != offset) {
       // if (state.curLineHeight != 0) scrollToNextWord(); // skip first scroll
-      if (state.curLineHeight != 0) dispatch({ type: ACTION.CONSOLIDATE });
+      if (state.lastLineBreak < state.frontPos[0] && state.curLineHeight != 0) {
+        dispatch({ type: ACTION.CONSOLIDATE });
+        dispatch({ type: ACTION.GENERATE });
+      }
       dispatch({
         type: ACTION.SET_NEW_LINE,
         payload: { lineHeight: offset },
@@ -104,13 +107,12 @@ export default function Home() {
   };
 
   const newGame = (e?: MouseEvent<HTMLAnchorElement>) => {
-    dispatch({ type: ACTION.INIT, payload: { newNumWords: 70 } });
+    dispatch({ type: ACTION.INIT });
     setIsPaused(true);
     setTimer(initTime.current);
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
-    wordsRef.current[0]?.scrollIntoView({ block: "center" });
     focusInputEl();
   };
 
@@ -122,7 +124,6 @@ export default function Home() {
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
-    wordsRef.current[0]?.scrollIntoView({ block: "center" });
     focusInputEl();
   };
 
@@ -131,9 +132,9 @@ export default function Home() {
     textAreaRef.current.focus({ preventScroll: true });
   };
 
-  const scrollToNextWord = () => {
-    wordsRef.current[state.frontPos[0]]?.scrollIntoView({ block: "center" });
-  };
+  // const scrollToNextWord = () => {
+  //   wordsRef.current[state.frontPos[0]]?.scrollIntoView({ block: "center" });
+  // };
 
   const calcTime = () => {
     const time = (
@@ -186,7 +187,7 @@ export default function Home() {
               <div
                 className={`${
                   isPaused ? "" : "hidden"
-                } flex text-sm text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
+                } flex text-base text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
               >
                 {initTimes.current.map((time, idx) => (
                   <p
@@ -210,7 +211,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className=" relative flex flex-wrap text-2xl select-none max-h-[6rem] overflow-y-scroll scrollbar">
+          <div className=" relative flex flex-wrap text-2xl select-none max-h-[6rem] overflow-hidden">
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {
@@ -222,7 +223,7 @@ export default function Home() {
               />
             ))}
             <textarea
-              className={`fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer scrollbar`}
+              className={`fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer caret-transparent scrollbar`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();

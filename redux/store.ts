@@ -10,13 +10,19 @@ const randomWords = require("random-words");
 
 export const UserContext = createContext<StateType | null>(null);
 
-const Initializer = (numWords: number): StateType => {
-  let newTrueText: string = randomWords({
+const MAX_WORDS = 60;
+
+const generateNumWords = (numWords: number): string => {
+  return randomWords({
     exactly: 1,
     wordsPerString: numWords,
     join: " ",
     maxLength: 8,
   });
+};
+
+const Initializer = (numWords: number): StateType => {
+  const newTrueText = generateNumWords(numWords);
   return {
     trueText: newTrueText,
     trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
@@ -62,9 +68,7 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
   let curLetterPos = state.frontPos[1];
   switch (action.type) {
     case ACTION.INIT: {
-      if (action.payload?.newNumWords)
-        return Initializer(action.payload.newNumWords);
-      else throw Error("ERROR: INIT payload missing.");
+      return Initializer(MAX_WORDS);
     }
     case ACTION.ADD_CORRECT: {
       let newLetterStates: LetterTypeState[][] = [...state.letterStates];
@@ -165,6 +169,20 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
         letterStates: newLetterStates,
         frontPos: [state.frontPos[0] - state.lastLineBreak, state.frontPos[1]],
         lastLineBreak: 0,
+      };
+    }
+    case ACTION.GENERATE: {
+      const numWords = MAX_WORDS - state.trueWords.length;
+      const additionalTrueWords = generateNumWords(numWords)
+        .split(" ")
+        .map((word) => word.concat(" "));
+      const additionalLetterStates = additionalTrueWords.map((word) =>
+        word.split("").map((_) => LetterTypeState.NORMAL)
+      );
+      return {
+        ...state,
+        trueWords: state.trueWords.concat(additionalTrueWords),
+        letterStates: state.letterStates.concat(additionalLetterStates),
       };
     }
     default:

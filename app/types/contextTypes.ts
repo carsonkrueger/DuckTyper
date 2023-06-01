@@ -14,6 +14,7 @@ export enum ACTION {
   ADD_INCORRECT,
   REMOVE,
   CONSOLIDATE,
+  GENERATE,
   RESET,
   INIT,
   SET_NEW_LINE,
@@ -22,7 +23,6 @@ export enum ACTION {
 export type ActionType = {
   type: ACTION;
   payload?: {
-    newNumWords?: number;
     lineHeight?: number;
   };
 };
