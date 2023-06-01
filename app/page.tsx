@@ -38,7 +38,7 @@ export default function Home() {
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
-  const initTimes = useRef([15, 30, 60, 90]);
+  const initTimes = useRef([30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
@@ -103,17 +103,18 @@ export default function Home() {
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
-    focusInputEl();
+    // focusInputEl();
   };
 
   const newGame = (e?: MouseEvent<HTMLAnchorElement>) => {
+    if (e) e.preventDefault();
     dispatch({ type: ACTION.INIT });
     setIsPaused(true);
     setTimer(initTime.current);
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
-    focusInputEl();
+    // focusInputEl();
   };
 
   const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
@@ -124,7 +125,6 @@ export default function Home() {
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
-    focusInputEl();
   };
 
   const focusInputEl = (e?: MouseEvent) => {
@@ -150,7 +150,7 @@ export default function Home() {
   return (
     <main
       className="flex flex-col min-h-screen items-center justify-between p-2 sm:p-10 bg-dark text-secondary font-roboto-mono"
-      onClick={(e) => focusInputEl(e)}
+      // onClick={(e) => focusInputEl(e)}
     >
       <UserContext.Provider value={state as StateType}>
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
@@ -161,7 +161,7 @@ export default function Home() {
               width={30}
               height={30}
             />
-            <p className="font-Shadows-Into-Light">DuckTyper</p>
+            <p className="font-Shadows-Into-Light">Duck-Typer</p>
           </div>
 
           <div></div>
@@ -180,38 +180,53 @@ export default function Home() {
         </a> */}
         </header>
 
-        <div className="flex flex-col max-w-6xl space-y-2">
-          <div className="flex flex-row justify-between text-4xl text-primary">
-            <div className="flex space-x-3">
-              <p className={" min-w-[2.5rem]"}>{timer}</p>
-              <div
-                className={`${
-                  isPaused ? "" : "hidden"
-                } flex text-base text-secondary my-2 justify-center items-center rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
-              >
-                {initTimes.current.map((time, idx) => (
-                  <p
-                    className={`hover:bg-secondaryHighlight ${
-                      initTime.current === initTimes.current[idx]
-                        ? "bg-secondaryLowlight"
-                        : ""
-                    }`}
-                    onClick={() => setInitTime(initTimes.current[idx])}
-                    key={idx}
-                  >
-                    {time}
-                  </p>
-                ))}
+        <div className="flex flex-col max-w-6xl min-w-full xl:min-w-[72rem] space-y-4">
+          <div className="flex justify-between text-4xl text-primary">
+            <div className="flex items-center space-x-3">
+              <p className={"min-w-[2.5rem]"}>
+                {timer.toString().padStart(2, "0")}
+              </p>
+
+              <div className={`${isPaused ? "flex" : "hidden"} flex-col`}>
+                <p className="absolute text-secondary text-xs self-center -translate-y-4">
+                  timer
+                </p>
+                <div
+                  className={` flex text-base text-secondary justify-center items-end rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
+                >
+                  {initTimes.current.map((time, idx) => (
+                    <p
+                      className={`hover:bg-secondaryHighlight outline-none ${
+                        initTime.current === initTimes.current[idx]
+                          ? "bg-secondaryLowlight"
+                          : ""
+                      }`}
+                      onClick={() => setInitTime(initTimes.current[idx])}
+                      key={idx}
+                    >
+                      {time}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-row items-end space-x-2">
-              <p>{calcTime()}</p>
-              <p className="text-lg text-secondary">wpm</p>
+            <div className="text-4xl flex flex-row space-x-3">
+              <div className="flex space-x-1 items-end">
+                <p className="text-red-700">{state.incorrectLetters}</p>
+                <p className="text-lg text-secondary">err</p>
+              </div>
+              <div className=" flex space-x-1 items-end">
+                <p>{calcTime()}</p>
+                <p className="text-lg text-secondary">wpm</p>
+              </div>
             </div>
           </div>
 
-          <div className=" relative flex flex-wrap text-2xl select-none max-h-[6rem] overflow-hidden">
+          <div
+            className="cursor-pointer relative flex flex-wrap text-2xl select-none max-h-[6rem] min-h-[6rem] overflow-hidden"
+            onClick={(e) => focusInputEl(e)}
+          >
             {state.trueWords.map((_, idx) => (
               <Word
                 ref={(el: HTMLDivElement) => {
@@ -232,11 +247,21 @@ export default function Home() {
               ref={textAreaRef}
               spellCheck={false}
               disabled={!canType.current}
+              autoCapitalize="off"
+              autoComplete="off"
+              autoCorrect="off"
             />
           </div>
-          <div className="flex justify-center space-x-10 py-2 [&>a]:p-2">
+
+          <div
+            className={`flex justify-center space-x-10 py-2 [&>a]:p-2 ${
+              timer === 0
+                ? "[&>a]:animate-pulse [&>a]:bg-secondaryLowlight"
+                : ""
+            } `}
+          >
             <a
-              className="rounded-full hover:bg-secondaryLowlight"
+              className="rounded-full hover:bg-secondaryLowlight focus:outline-none focus-visible:hidden"
               href=""
               onClick={reset}
             >

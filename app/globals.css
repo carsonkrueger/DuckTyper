@@ -9,4 +9,8 @@
   .scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
 }

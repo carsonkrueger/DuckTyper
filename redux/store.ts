@@ -97,7 +97,7 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
           state.trueWords[curWordPos].length,
           state.trueWords.length
         ),
-        incorrectLetters: state.correctLetters + 1,
+        incorrectLetters: state.incorrectLetters + 1,
       };
     }
     case ACTION.REMOVE: {
