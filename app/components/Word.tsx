@@ -2,7 +2,7 @@ import { forwardRef, useContext, useEffect, useRef } from "react";
 import { UserContext } from "@/redux/store";
 
 import Letter from "./Letter";
-import { StateType } from "../types/contextTypes";
+import { StateType } from "../../types/types";
 
 interface props {
   wordPos: number;
@@ -10,12 +10,6 @@ interface props {
 
 const Word = forwardRef<HTMLDivElement, props>(({ wordPos }: props, ref) => {
   const { trueWords } = useContext(UserContext) as StateType;
-  // const trueWord = useRef<string>("");
-
-  // useEffect(() => {
-  //   if (trueWords[wordPos] != undefined)
-  //     trueWord.current = trueWords[wordPos];
-  // }, [trueWords])
 
   return (
     <div ref={ref} className="flex flex-row flex-wrap">

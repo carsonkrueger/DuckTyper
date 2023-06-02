@@ -4,11 +4,6 @@ export enum LetterTypeState {
   INCORRECT,
 }
 
-export interface IWord {
-  wordPos: number;
-  trueWord: string;
-}
-
 export enum ACTION {
   ADD_CORRECT,
   ADD_INCORRECT,
@@ -24,6 +19,7 @@ export type ActionType = {
   type: ACTION;
   payload?: {
     lineHeight?: number;
+    curMode?: number;
   };
 };
 

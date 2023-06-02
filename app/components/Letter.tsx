@@ -1,7 +1,7 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/redux/store";
 
-import { LetterTypeState, StateType } from "../types/contextTypes";
+import { LetterTypeState, StateType } from "../../types/types";
 
 interface props {
   wordPos: number;

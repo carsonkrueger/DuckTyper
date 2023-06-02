@@ -1,9 +1,4 @@
-import {
-  ACTION,
-  ActionType,
-  LetterTypeState,
-  StateType,
-} from "@/app/types/contextTypes";
+import { ACTION, ActionType, LetterTypeState, StateType } from "@/types/types";
 import { createContext } from "react";
 
 const randomWords = require("random-words");
@@ -12,17 +7,30 @@ export const UserContext = createContext<StateType | null>(null);
 
 const MAX_WORDS = 60;
 
-const generateNumWords = (numWords: number): string => {
+const generateNumWords = (numWords: number, mode: number): string => {
+  let maxLen = 0;
+  switch (mode) {
+    case 1:
+      maxLen = 6;
+      break;
+    case 2:
+      maxLen = 9;
+      break;
+    case 3:
+      maxLen = 14;
+      break;
+  }
+
   return randomWords({
     exactly: 1,
     wordsPerString: numWords,
     join: " ",
-    maxLength: 8,
+    maxLength: maxLen,
   });
 };
 
-const Initializer = (numWords: number): StateType => {
-  const newTrueText = generateNumWords(numWords);
+const Initializer = (numWords: number, mode: number): StateType => {
+  const newTrueText = generateNumWords(numWords, mode);
   return {
     trueText: newTrueText,
     trueWords: newTrueText.split(" ").map((word) => word.concat(" ")),
@@ -68,7 +76,9 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
   let curLetterPos = state.frontPos[1];
   switch (action.type) {
     case ACTION.INIT: {
-      return Initializer(MAX_WORDS);
+      if (action.payload?.curMode === undefined)
+        throw Error("Mode payload cannot be empty");
+      return Initializer(MAX_WORDS, action.payload.curMode);
     }
     case ACTION.ADD_CORRECT: {
       let newLetterStates: LetterTypeState[][] = [...state.letterStates];
@@ -172,8 +182,13 @@ export const reducer = (state: StateType, action: ActionType): StateType => {
       };
     }
     case ACTION.GENERATE: {
+      if (action.payload?.curMode === undefined)
+        throw Error("Mode payload cannot be empty");
       const numWords = MAX_WORDS - state.trueWords.length;
-      const additionalTrueWords = generateNumWords(numWords)
+      const additionalTrueWords = generateNumWords(
+        numWords,
+        action.payload.curMode
+      )
         .split(" ")
         .map((word) => word.concat(" "));
       const additionalLetterStates = additionalTrueWords.map((word) =>

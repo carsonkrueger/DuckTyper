@@ -12,7 +12,7 @@ import {
 import Image from "next/image";
 
 import Word from "./components/Word";
-import { LetterTypeState, StateType, ACTION } from "./types/contextTypes";
+import { LetterTypeState, StateType, ACTION } from "../types/types";
 import { UserContext, reducer } from "@/redux/store";
 
 const initialState: StateType = {
@@ -38,6 +38,9 @@ export default function Home() {
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
+  const modes = useRef([1, 2, 3]);
+  const [mode, setMode] = useState(modes.current[1]);
+
   const initTimes = useRef([30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
@@ -45,7 +48,7 @@ export default function Home() {
 
   useEffect(() => {
     focusInputEl();
-    dispatch({ type: ACTION.INIT });
+    dispatch({ type: ACTION.INIT, payload: { curMode: mode } });
   }, []);
 
   useEffect(() => {
@@ -72,7 +75,7 @@ export default function Home() {
       // if (state.curLineHeight != 0) scrollToNextWord(); // skip first scroll
       if (state.lastLineBreak < state.frontPos[0] && state.curLineHeight != 0) {
         dispatch({ type: ACTION.CONSOLIDATE });
-        dispatch({ type: ACTION.GENERATE });
+        dispatch({ type: ACTION.GENERATE, payload: { curMode: mode } });
       }
       dispatch({
         type: ACTION.SET_NEW_LINE,
@@ -80,6 +83,10 @@ export default function Home() {
       });
     }
   }, [state.frontPos]);
+
+  useEffect(() => {
+    newGame();
+  }, [mode]);
 
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const userText = e.target.value.split("");
@@ -103,21 +110,19 @@ export default function Home() {
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
-    // focusInputEl();
   };
 
-  const newGame = (e?: MouseEvent<HTMLAnchorElement>) => {
+  const newGame = (e?: MouseEvent) => {
     if (e) e.preventDefault();
-    dispatch({ type: ACTION.INIT });
+    dispatch({ type: ACTION.INIT, payload: { curMode: mode } });
     setIsPaused(true);
     setTimer(initTime.current);
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
-    // focusInputEl();
   };
 
-  const reset = (e?: MouseEvent<HTMLAnchorElement>) => {
+  const reset = (e?: MouseEvent) => {
     if (e) e.preventDefault();
     dispatch({ type: ACTION.RESET });
     setIsPaused(true);
@@ -149,23 +154,66 @@ export default function Home() {
 
   return (
     <main
-      className="flex flex-col min-h-screen items-center justify-between p-2 sm:p-10 bg-dark text-secondary font-roboto-mono"
+      className="flex flex-col min-h-screen items-center justify-between p-3 sm:p-10 bg-dark text-secondary font-roboto-mono"
       // onClick={(e) => focusInputEl(e)}
     >
       <UserContext.Provider value={state as StateType}>
-        <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
-          <div className="flex space-x-3">
-            <Image
-              className="hover:animate-spin"
-              src={"/duck.svg"}
-              alt={"DuckTyper logo"}
-              width={30}
-              height={30}
-            />
-            <p className="font-Shadows-Into-Light">DuckTyper</p>
+        <header className="flex flex-col sm:flex-row sm:space-y-0 sm:justify-between items-center max-w-6xl min-w-full xl:min-w-[72rem] text-3xl text-white">
+          <div className="flex space-x-3 self-start">
+            <div className="flex items-center font-Shadows-Into-Light">
+              <p className="bg-primary text-secondary rounded-md p-1">Duck</p>
+              <p className="p-1">Typer</p>
+            </div>
           </div>
 
-          <div></div>
+          <div className="flex translate-y-5 space-x-3">
+            <div className="flex flex-col space-y-1">
+              <p className="text-secondary text-xs self-center">timer</p>
+              <div
+                className={`flex text-base text-secondary justify-center items-end rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
+              >
+                {initTimes.current.map((time, idx) => (
+                  <a
+                    className={`hover:bg-secondaryHighlight outline-none ${
+                      initTime.current === initTimes.current[idx]
+                        ? "bg-secondaryLowlight"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (!isPaused) return;
+                      setInitTime(initTimes.current[idx]);
+                    }}
+                    key={idx}
+                  >
+                    {time}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col space-y-1">
+              <p className=" text-secondary text-xs self-center">difficulty</p>
+              <div
+                className={`flex text-base text-secondary justify-center items-end rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
+              >
+                {modes.current.map((lvl, idx) => (
+                  <a
+                    className={`hover:bg-secondaryHighlight outline-none ${
+                      mode === lvl ? "bg-secondaryLowlight" : ""
+                    }`}
+                    onClick={() => {
+                      if (!isPaused) return;
+                      setMode(lvl);
+                    }}
+                    key={idx}
+                  >
+                    {lvl.toString().padStart(2, "0")}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* <a
           className="flex justify-center"
           href=""
@@ -179,43 +227,35 @@ export default function Home() {
             height={25}
           />
         </a> */}
+
+          {/* <Image
+            className="sm:hidden absolute top-0 right-0 m-5"
+            src={"/hamburger.svg"}
+            alt={"Menu"}
+            width={30}
+            height={30}
+          /> */}
+
+          <Image
+            className="hover:animate-spin sm:hidden absolute top-0 right-0 m-5"
+            src={"/duck.svg"}
+            alt={"DuckTyper logo"}
+            width={30}
+            height={30}
+          />
         </header>
 
         <div className="flex flex-col max-w-6xl min-w-full xl:min-w-[72rem] space-y-4">
           <div className="flex justify-between text-4xl text-primary">
-            <div className="flex items-center space-x-3">
-              <p className={"min-w-[2.5rem]"}>
-                {timer.toString().padStart(2, "0")}
-              </p>
-
-              <div className={`${isPaused ? "flex" : "hidden"} flex-col`}>
-                <p className="absolute text-secondary text-xs self-center -translate-y-4">
-                  timer
-                </p>
-                <div
-                  className={` flex text-base text-secondary justify-center items-end rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
-                >
-                  {initTimes.current.map((time, idx) => (
-                    <p
-                      className={`hover:bg-secondaryHighlight outline-none ${
-                        initTime.current === initTimes.current[idx]
-                          ? "bg-secondaryLowlight"
-                          : ""
-                      }`}
-                      onClick={() => setInitTime(initTimes.current[idx])}
-                      key={idx}
-                    >
-                      {time}
-                    </p>
-                  ))}
-                </div>
-              </div>
+            <div className="flex items-end space-x-1">
+              <p>{timer.toString().padStart(2, "0")}</p>
+              <p className="text-lg text-secondary">s</p>
             </div>
 
             <div className="text-4xl flex flex-row space-x-3">
               <div className="flex space-x-1 items-end">
                 <p className="text-red-700">{state.incorrectLetters}</p>
-                <p className="text-lg text-secondary">err</p>
+                {/* <p className="text-lg text-secondary">err</p> */}
               </div>
               <div className=" flex space-x-1 items-end">
                 <p>{calcTime()}</p>
@@ -226,7 +266,10 @@ export default function Home() {
 
           <div
             className="cursor-pointer relative flex flex-wrap text-2xl select-none max-h-[6rem] min-h-[6rem] overflow-hidden"
-            onClick={(e) => focusInputEl(e)}
+            onClick={(e) => {
+              if (isPaused) reset();
+              focusInputEl(e);
+            }}
           >
             {state.trueWords.map((_, idx) => (
               <Word
@@ -278,7 +321,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div></div>
+        <div className="min-h-[5rem]"></div>
       </UserContext.Provider>
     </main>
   );
