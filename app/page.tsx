@@ -156,12 +156,13 @@ export default function Home() {
         <header className="flex flex-row justify-between max-w-6xl min-w-max text-3xl text-white">
           <div className="flex space-x-3">
             <Image
+              className="hover:animate-spin"
               src={"/duck.svg"}
               alt={"DuckTyper logo"}
               width={30}
               height={30}
             />
-            <p className="font-Shadows-Into-Light">Duck-Typer</p>
+            <p className="font-Shadows-Into-Light">DuckTyper</p>
           </div>
 
           <div></div>
@@ -238,7 +239,7 @@ export default function Home() {
               />
             ))}
             <textarea
-              className={`fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none cursor-pointer caret-transparent scrollbar`}
+              className={`text-xs/3 fixed -z-50 min-h-full min-w-full resize-none bg-transparent text-transparent selection:bg-transparent outline-none caret-transparent scrollbar`}
               onChange={onTextChange}
               onPaste={(e) => {
                 e.preventDefault();
