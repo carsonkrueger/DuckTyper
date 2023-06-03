@@ -178,7 +178,7 @@ export default function Home() {
         <header className="flex flex-col sm:flex-row sm:space-y-0 sm:justify-between items-center max-w-6xl min-w-full xl:min-w-[72rem] text-3xl text-white">
           <div className="flex space-x-3 self-start">
             <div className="flex items-center font-Shadows-Into-Light">
-              <p className="bg-primary text-secondary rounded-md p-1">Duck</p>
+              <p className="bg-primary text-dark rounded-md p-1">Duck</p>
               <p className="p-1">Typer</p>
             </div>
           </div>
