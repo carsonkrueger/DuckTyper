@@ -151,7 +151,6 @@ export default function Home() {
   const endGame = () => {
     canType.current = false;
     setIsPaused(true);
-    setHP(0);
   };
 
   const focusInputEl = (e?: MouseEvent) => {
@@ -273,13 +272,19 @@ export default function Home() {
             <div
               className={`${
                 mode === 0 ? "hidden" : "flex"
-              } absolute self-center justify-center left-0 right-0 text-dark ${
+              } absolute self-center justify-center left-0 right-0 ${
                 HP === 0 ? "animate-shake" : ""
               }`}
             >
-              <Image src="/heart.svg" alt="Health" height={60} width={60} />
+              <Image
+                style={{ fill: "none" }}
+                src="/heart.svg"
+                alt="Health"
+                height={60}
+                width={60}
+              />
 
-              <p className="flex w-[60] h-[55px] absolute items-center text-2xl">
+              <p className="flex absolute translate-y-3 items-center text-dark text-2xl">
                 {HP}
               </p>
             </div>
@@ -331,7 +336,7 @@ export default function Home() {
 
           <div
             className={`flex justify-center space-x-10 py-2 [&>a]:p-2 ${
-              timer === 0
+              timer === 0 || HP === 0
                 ? "[&>a]:animate-pulse-fast [&>a]:bg-secondaryLowlight"
                 : ""
             } `}
