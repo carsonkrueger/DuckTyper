@@ -38,13 +38,18 @@ export default function Home() {
   const lettersPerWord = useRef(5);
   const canType = useRef(true);
 
-  const modes = useRef([1, 2, 3]);
-  const [mode, setMode] = useState(modes.current[1]);
+  const modes = useRef([0, 1, 2, 3]);
+  const [mode, setMode] = useState(modes.current[0]);
 
   const initTimes = useRef([30, 60, 90]);
   const initTime = useRef(initTimes.current[1]);
   const [timer, setTimer] = useState<number>(initTime.current);
   const [isPaused, setIsPaused] = useState<boolean>(true);
+
+  const initHP = useRef([20, 20, 14, 8]);
+  const [HP, setHP] = useState<number>(
+    initHP.current[mode] * (initTime.current / 30)
+  );
 
   useEffect(() => {
     focusInputEl();
@@ -61,9 +66,8 @@ export default function Home() {
   }, [isPaused]);
 
   useEffect(() => {
-    if (timer <= 0.01) {
-      canType.current = false;
-      setIsPaused(true);
+    if (timer <= 0) {
+      endGame();
     }
   }, [timer]);
 
@@ -85,8 +89,17 @@ export default function Home() {
   }, [state.frontPos]);
 
   useEffect(() => {
+    setHP(initHP.current[mode - 1] * (initTime.current / 30));
     newGame();
   }, [mode]);
+
+  useEffect(() => {
+    if (!isPaused) setHP((prev) => prev - 1);
+  }, [state.incorrectLetters]);
+
+  useEffect(() => {
+    if (HP <= 0) endGame();
+  }, [HP]);
 
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const userText = e.target.value.split("");
@@ -110,6 +123,7 @@ export default function Home() {
   const setInitTime = (time: number) => {
     initTime.current = time;
     setTimer(initTime.current);
+    reset();
   };
 
   const newGame = (e?: MouseEvent) => {
@@ -117,6 +131,7 @@ export default function Home() {
     dispatch({ type: ACTION.INIT, payload: { curMode: mode } });
     setIsPaused(true);
     setTimer(initTime.current);
+    setHP(initHP.current[mode] * (initTime.current / 30));
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
@@ -127,19 +142,22 @@ export default function Home() {
     dispatch({ type: ACTION.RESET });
     setIsPaused(true);
     setTimer(initTime.current);
+    setHP(initHP.current[mode] * (initTime.current / 30));
     textAreaRef.current.value = "";
     canType.current = true;
     prevUserInputLength.current = 0;
+  };
+
+  const endGame = () => {
+    canType.current = false;
+    setIsPaused(true);
+    setHP(0);
   };
 
   const focusInputEl = (e?: MouseEvent) => {
     if (e) e.preventDefault();
     textAreaRef.current.focus({ preventScroll: true });
   };
-
-  // const scrollToNextWord = () => {
-  //   wordsRef.current[state.frontPos[0]]?.scrollIntoView({ block: "center" });
-  // };
 
   const calcTime = () => {
     const time = (
@@ -166,17 +184,17 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex translate-y-5 space-x-3">
+          <div className="flex space-x-10 py-1 rounded-xl translate-y-6 sm:translate-y-0">
             <div className="flex flex-col space-y-1">
               <p className="text-secondary text-xs self-center">timer</p>
               <div
-                className={`flex text-base text-secondary justify-center items-end rounded-lg border border-secondaryHighlight overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
+                className={`flex border border-secondaryHighlight text-base text-secondary justify-center items-end rounded-lg overflow-hidden [&>*]:px-[3px] [&>*]:cursor-pointer`}
               >
                 {initTimes.current.map((time, idx) => (
                   <a
-                    className={`hover:bg-secondaryHighlight outline-none ${
+                    className={` outline-none ${
                       initTime.current === initTimes.current[idx]
-                        ? "bg-secondaryLowlight"
+                        ? "bg-primary"
                         : ""
                     }`}
                     onClick={() => {
@@ -198,8 +216,8 @@ export default function Home() {
               >
                 {modes.current.map((lvl, idx) => (
                   <a
-                    className={`hover:bg-secondaryHighlight outline-none ${
-                      mode === lvl ? "bg-secondaryLowlight" : ""
+                    className={` outline-none ${
+                      mode === lvl ? "bg-primary" : ""
                     }`}
                     onClick={() => {
                       if (!isPaused) return;
@@ -246,17 +264,31 @@ export default function Home() {
         </header>
 
         <div className="flex flex-col max-w-6xl min-w-full xl:min-w-[72rem] space-y-4">
-          <div className="flex justify-between text-4xl text-primary">
+          <div className="flex justify-between text-4xl text-primary [&>*]:min-w-[7rem]">
             <div className="flex items-end space-x-1">
               <p>{timer.toString().padStart(2, "0")}</p>
               <p className="text-lg text-secondary">s</p>
             </div>
 
-            <div className="text-4xl flex flex-row space-x-3">
-              <div className="flex space-x-1 items-end">
+            <div
+              className={`${
+                mode === 0 ? "hidden" : "flex"
+              } absolute self-center justify-center left-0 right-0 text-dark ${
+                HP === 0 ? "animate-shake" : ""
+              }`}
+            >
+              <Image src="/heart.svg" alt="Health" height={60} width={60} />
+
+              <p className="flex w-[60] h-[55px] absolute items-center text-2xl">
+                {HP}
+              </p>
+            </div>
+
+            <div className="text-4xl flex flex-row space-x-3 justify-end">
+              {/* <div className="flex space-x-1 items-end">
                 <p className="text-red-700">{state.incorrectLetters}</p>
-                {/* <p className="text-lg text-secondary">err</p> */}
-              </div>
+              </div> 
+              */}
               <div className=" flex space-x-1 items-end">
                 <p>{calcTime()}</p>
                 <p className="text-lg text-secondary">wpm</p>
@@ -300,7 +332,7 @@ export default function Home() {
           <div
             className={`flex justify-center space-x-10 py-2 [&>a]:p-2 ${
               timer === 0
-                ? "[&>a]:animate-pulse [&>a]:bg-secondaryLowlight"
+                ? "[&>a]:animate-pulse-fast [&>a]:bg-secondaryLowlight"
                 : ""
             } `}
           >
@@ -321,7 +353,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="min-h-[5rem]"></div>
+        <div></div>
       </UserContext.Provider>
     </main>
   );

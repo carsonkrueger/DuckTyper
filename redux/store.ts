@@ -10,6 +10,7 @@ const MAX_WORDS = 60;
 const generateNumWords = (numWords: number, mode: number): string => {
   let maxLen = 0;
   switch (mode) {
+    case 0:
     case 1:
       maxLen = 6;
       break;
