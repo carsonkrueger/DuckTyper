@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL")
+  directUrl         = env("POSTGRES_URL_NON_POOLING")
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model record {
+  id         Int    @id @default(autoincrement())
+  username   String @db.VarChar(12)
+  timer      Int    @db.SmallInt
+  difficulty Int    @db.SmallInt
+  wpm        Int    @db.SmallInt
+}
