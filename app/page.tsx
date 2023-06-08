@@ -5,6 +5,7 @@ export default function Home() {
   return (
     <>
       <Game />
+      {/* @ts-expect-error Async Server Component */}
       <LeaderBoard />
     </>
   );

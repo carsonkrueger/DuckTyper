@@ -33,3 +33,10 @@ export type StateType = {
   lastLineBreak: number;
   curLineHeight: number;
 };
+
+export type Record = {
+  username: string;
+  timer: number;
+  difficulty: number;
+  wpm: number;
+};
